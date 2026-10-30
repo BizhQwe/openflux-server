@@ -13,10 +13,10 @@ function fixture(t, scenario) {
   const bin = path.join(root, 'bin');
   fs.mkdirSync(bin);
   fs.writeFileSync(path.join(bin, 'id'), '#!/bin/sh\nif [ "$1" = -u ]; then echo 0; else exec /usr/bin/id "$@"; fi\n', {mode: 0o700});
-  fs.writeFileSync(path.join(root, 'dummy-installer'), `#!/usr/bin/node
+  fs.writeFileSync(path.join(root, 'dummy-installer'), `#!${process.execPath}
 require('node:fs').writeFileSync(require('node:path').join(process.env.OPENFLUX_BOOTSTRAP_FIXTURE, 'executed.json'), JSON.stringify(process.argv.slice(2)));
 `, {mode: 0o700});
-  fs.writeFileSync(path.join(bin, 'curl'), `#!/usr/bin/node
+  fs.writeFileSync(path.join(bin, 'curl'), `#!${process.execPath}
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -43,7 +43,7 @@ if (url.endsWith('.sha256')) {
       return spawnSync('/bin/sh', [bootstrap, ...args], {
         encoding: 'utf8', timeout: 10000, maxBuffer: 64 * 1024,
         env: {
-          PATH: bin + ':/usr/bin:/bin', HOME: root, LC_ALL: 'C',
+          PATH: [bin, path.dirname(process.execPath), '/usr/local/bin', '/usr/bin', '/bin'].join(':'), HOME: root, LC_ALL: 'C',
           OPENFLUX_BOOTSTRAP_FIXTURE: root, OPENFLUX_BOOTSTRAP_CASE: scenario,
         },
       });

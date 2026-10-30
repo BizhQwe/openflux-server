@@ -32,7 +32,7 @@ test('release packaging contains only installers and checksums and removes stale
   }
   const result = spawnSync('/bin/sh', [path.join(scripts, 'package-release.sh'), '--skip-build', release], {
     encoding: 'utf8', timeout: 10000, maxBuffer: 64 * 1024,
-    env: {PATH: '/usr/bin:/bin', HOME: root, TMPDIR: root, LC_ALL: 'C'},
+    env: {PATH: '/usr/local/bin:/usr/bin:/bin', HOME: root, TMPDIR: root, LC_ALL: 'C'},
   });
   assert.equal(result.error, undefined);
   assert.equal(result.status, 0, result.stderr);
