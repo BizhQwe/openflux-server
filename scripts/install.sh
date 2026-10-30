@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# OpenFlux Zen Server - Fast 1-Command Bootstrap Installer (Linux)
+# OpenFlux Server - Fast 1-Command Bootstrap Installer (Linux)
 # Supports: Linux x64, Linux ARM64, Linux x86, Linux ARMv7
 # ==============================================================================
 
@@ -18,18 +18,18 @@ for arg in "$@"; do
     if [ "$arg" = "--uninstall" ] || [ "$arg" = "uninstall" ] || [ "$arg" = "-u" ]; then
         echo ""
         echo "=============================================================="
-        echo "  OpenFlux Zen Server — Полное удаление"
+        echo "  OpenFlux Server — Полное удаление"
         echo "=============================================================="
         echo "  [INFO] Остановка служб и процессов..."
-        systemctl disable --now openflux-zen-server.service openflux-zrok.service openflux.service 2>/dev/null || true
-        pkill -9 -x OpenFlux.Zen.Server.Web 2>/dev/null || true
-        pkill -9 -x OpenFlux.Zen.Server 2>/dev/null || true
-        pkill -9 -x OpenFluxZenServer 2>/dev/null || true
+        systemctl disable --now openflux-server.service openflux-zrok.service openflux.service 2>/dev/null || true
+        pkill -9 -x web 2>/dev/null || true
+        pkill -9 -x OpenFlux.Server 2>/dev/null || true
+        pkill -9 -x OpenFluxServer 2>/dev/null || true
         pkill -9 -x openflux-linux-amd64 2>/dev/null || true
         pkill -9 -x openflux-linux-arm64 2>/dev/null || true
-        pkill -9 -x openflux-zen-server-web 2>/dev/null || true
-        pkill -9 -x openflux-zen-server-core 2>/dev/null || true
-        pkill -9 -x openflux-zen-server-cli 2>/dev/null || true
+        pkill -9 -x openflux-server-web 2>/dev/null || true
+        pkill -9 -x openflux-server-core 2>/dev/null || true
+        pkill -9 -x openflux-server-cli 2>/dev/null || true
         pkill -9 -x openflux 2>/dev/null || true
         pkill -9 -x zrok 2>/dev/null || true
 
@@ -42,11 +42,11 @@ for arg in "$@"; do
         rm -f /etc/nginx/conf.d/openflux*.conf /etc/nginx/sites-enabled/openflux* /etc/nginx/sites-available/openflux* 2>/dev/null || true
         systemctl reload nginx 2>/dev/null || true
         rm -f /etc/profile.d/openflux*.sh /etc/sudoers.d/openflux 2>/dev/null || true
-        rm -rf /opt/openflux-zen-server /opt/openflux /etc/openflux /var/log/openflux /var/lib/openflux /tmp/openflux* /var/tmp/openflux* ~/.openflux ~/.config/openflux
-        rm -f /usr/local/bin/OpenFluxZenServer /usr/local/bin/openfluxzenserver /usr/local/bin/openflux /usr/local/bin/openflux-zen-server /usr/bin/OpenFluxZenServer /usr/bin/openfluxzenserver /usr/bin/openflux /usr/bin/openflux-zen-server /bin/openflux 2>/dev/null || true
+        rm -rf /opt/openflux-server /opt/openflux /etc/openflux /var/log/openflux /var/lib/openflux /tmp/openflux* /var/tmp/openflux* ~/.openflux ~/.config/openflux
+        rm -f /usr/local/bin/OpenFluxServer /usr/local/bin/openfluxzenserver /usr/local/bin/openflux /usr/local/bin/openflux-server /usr/bin/OpenFluxServer /usr/bin/openfluxzenserver /usr/bin/openflux /usr/bin/openflux-server /bin/openflux 2>/dev/null || true
 
         echo ""
-        echo "  [OK] OpenFlux Zen Server полностью удален из системы без каких-либо остатков."
+        echo "  [OK] OpenFlux Server полностью удален из системы без каких-либо остатков."
         echo "=============================================================="
         echo ""
         exit 0
@@ -81,12 +81,12 @@ umask 077
 TMP_BASE="/var/tmp"
 [ -w "$TMP_BASE" ] || TMP_BASE="/tmp"
 TMP_DIR=$(mktemp -d "$TMP_BASE/openflux-install.XXXXXXXXXX") || exit 1
-ASSET="openflux-zen-server-installer-$RID"
+ASSET="openflux-server-installer-$RID"
 INSTALLER_BIN="$TMP_DIR/$ASSET"
 CHECKSUM_FILE="$TMP_DIR/installer.sha256"
 trap 'rm -f -- "$INSTALLER_BIN" "$CHECKSUM_FILE"; rmdir -- "$TMP_DIR"' EXIT
 trap 'exit 1' HUP INT TERM
-REPO="${OPENFLUX_REPOSITORY:-BizhQwe/openflux-zen-server}"
+REPO="${OPENFLUX_REPOSITORY:-BizhQwe/openflux-server}"
 RELEASE_BASE="https://github.com/$REPO/releases/latest/download"
 TAG_BASE="https://github.com/$REPO/releases/download/v1.1.2"
 
@@ -100,7 +100,7 @@ download() {
 }
 
 echo ""
-echo "  OpenFlux Zen Server - Linux ($DISPLAY_ARCH)"
+echo "  OpenFlux Server - Linux ($DISPLAY_ARCH)"
 echo "  Downloading and verifying installer..."
 
 DOWNLOADED=0

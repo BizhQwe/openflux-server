@@ -1,4 +1,4 @@
-src/OpenFlux.Zen.Server.Core/deploy/node-install.sh text eol=lf
+src/core/deploy/node-install.sh text eol=lf
 scripts/*.sh text eol=lf
 scripts/targets.txt text eol=lf
 .github/workflows/*.yml text eol=lf
@@ -8,4 +8,4 @@ scripts/targets.txt text eol=lf
 # of the .js files would invalidate every signature (caught by
 # JvmPlatformServicesScriptTest's "valid" assertion failing only on the
 # Windows leg of OpenFluxDesktop's nightly CI).
-src/OpenFlux.Zen.Server.Core/transport/script/js/** -text
+src/core/transport/script/js/** -text

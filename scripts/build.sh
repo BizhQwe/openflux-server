@@ -17,7 +17,7 @@ go=${GO:-go}
 host_os=$("$go" env GOHOSTOS)
 host_arch=$("$go" env GOHOSTARCH)
 mkdir -p dist
-bundle=src/OpenFlux.Zen.Server.Installer/payload/bundle.zip
+bundle=src/installer/payload/bundle.zip
 trap 'rm -f "$bundle"' EXIT HUP INT TERM
 for target in $targets; do
     os=${target%%-*}
@@ -29,12 +29,12 @@ for target in $targets; do
     bin="dist/$target"
     mkdir -p "$bin"
     echo "Building $target"
-    GOOS="$os" GOARCH="$arch" GOARM="$arm" CGO_ENABLED=0 "$go" build -trimpath -ldflags='-s -w' -o "$bin/openflux-zen-server-core$suffix" ./src/OpenFlux.Zen.Server.Core
-    GOOS="$os" GOARCH="$arch" GOARM="$arm" CGO_ENABLED=0 "$go" build -trimpath -ldflags='-s -w' -o "$bin/openflux-zen-server-web$suffix" ./src/OpenFlux.Zen.Server.Web
-    GOOS="$os" GOARCH="$arch" GOARM="$arm" CGO_ENABLED=0 "$go" build -trimpath -ldflags='-s -w' -o "$bin/openflux-zen-server-cli$suffix" ./src/OpenFlux.Zen.Server.Cli
-    GOOS="$host_os" GOARCH="$host_arch" GOARM='' CGO_ENABLED=0 "$go" run ./src/OpenFlux.Zen.Server.Installer/cmd/bundle --os "$os" --arch "$arch" --dir "$bin" --out "$bundle"
-    installer="dist/openflux-zen-server-installer-$target$suffix"
-    GOOS="$os" GOARCH="$arch" GOARM="$arm" CGO_ENABLED=0 "$go" build -trimpath -ldflags='-s -w' -o "$installer" ./src/OpenFlux.Zen.Server.Installer
+    GOOS="$os" GOARCH="$arch" GOARM="$arm" CGO_ENABLED=0 "$go" build -trimpath -ldflags='-s -w' -o "$bin/openflux-server-core$suffix" ./src/core
+    GOOS="$os" GOARCH="$arch" GOARM="$arm" CGO_ENABLED=0 "$go" build -trimpath -ldflags='-s -w' -o "$bin/openflux-server-web$suffix" ./src/web
+    GOOS="$os" GOARCH="$arch" GOARM="$arm" CGO_ENABLED=0 "$go" build -trimpath -ldflags='-s -w' -o "$bin/openflux-server-cli$suffix" ./src/cli
+    GOOS="$host_os" GOARCH="$host_arch" GOARM='' CGO_ENABLED=0 "$go" run ./src/installer/cmd/bundle --os "$os" --arch "$arch" --dir "$bin" --out "$bundle"
+    installer="dist/openflux-server-installer-$target$suffix"
+    GOOS="$os" GOARCH="$arch" GOARM="$arm" CGO_ENABLED=0 "$go" build -trimpath -ldflags='-s -w' -o "$installer" ./src/installer
     (cd dist && sha256sum "$(basename "$installer")") > "$installer.sha256"
-    rm -f "$bin/openflux-core$suffix" "$bin/openflux-zen-server$suffix" "$bin/openflux$suffix"
+    rm -f "$bin/openflux-core$suffix" "$bin/openflux-server$suffix" "$bin/openflux$suffix"
 done

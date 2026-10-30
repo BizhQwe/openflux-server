@@ -1,10 +1,10 @@
 [Русский](README.md) | [English](README_EN.md)
 
 <p align="center">
-  <img src="src/OpenFlux.Zen.Server.Web/internal/panel/web/images/logo.svg" alt="OpenFlux Zen Server" width="96">
+  <img src="src/web/internal/panel/web/images/logo.svg" alt="OpenFlux Server" width="96">
 </p>
 
-<h1 align="center">OpenFlux Zen Server</h1>
+<h1 align="center">OpenFlux Server</h1>
 
 <p align="center">
   <strong>Автономный сервер и веб-панель для управления туннелями OpenFlux</strong>
@@ -14,12 +14,12 @@
   <img src="https://img.shields.io/badge/Go-1.26.9-00ADD8?logo=go&logoColor=white" alt="Go 1.26.9">
   <img src="https://img.shields.io/badge/%D0%9F%D0%BB%D0%B0%D1%82%D1%84%D0%BE%D1%80%D0%BC%D1%8B-Windows%20%7C%20Linux-blue" alt="Windows and Linux">
   <a href="LICENSE"><img src="https://img.shields.io/badge/%D0%9B%D0%B8%D1%86%D0%B5%D0%BD%D0%B7%D0%B8%D1%8F-GPL--3.0-blue" alt="GPL-3.0"></a>
-  <a href="https://github.com/BizhQwe/openflux-zen-server/releases"><img src="https://img.shields.io/github/v/release/BizhQwe/openflux-zen-server?color=blue&label=%D0%A0%D0%B5%D0%BB%D0%B8%D0%B7&logo=github" alt="Последний релиз"></a>
+  <a href="https://github.com/BizhQwe/openflux-server/releases"><img src="https://img.shields.io/github/v/release/BizhQwe/openflux-server?color=blue&label=%D0%A0%D0%B5%D0%BB%D0%B8%D0%B7&logo=github" alt="Последний релиз"></a>
 </p>
 
 ## О проекте
 
-**OpenFlux Zen Server** — это готовое серверное решение на базе ядра [OpenFlux](https://github.com/p1neappleXpress/OpenFlux), оснащённое интуитивной веб-панелью, системной службой и CLI-утилитой для администрирования. 
+**OpenFlux Server** — это готовое серверное решение на базе ядра [OpenFlux](https://github.com/p1neappleXpress/OpenFlux), оснащённое интуитивной веб-панелью, системной службой и CLI-утилитой для администрирования. 
 
 Сервер позволяет развернуть защищённую инфраструктуру L3/L4-туннелей за считаные минуты: настраивать серверные (exit) туннели прямо в браузере, отслеживать нагрузку и трафик в реальном времени, а клиентам мгновенно передавать конфигурации через ссылки или QR-коды.
 
@@ -30,7 +30,7 @@
 
 ## Возможности
 
-Ядро обновлено до OpenFlux v0.13.0. Добавлены Bitrix24, Mixed/Striped-группы, параметры каналов/сетей и исходящий SOCKS5-прокси для L4. Аудит и перенос локальных патчей описаны в [отчёте миграции](docs/core-upgrade-v0.13.0.md).
+Ядро обновлено до OpenFlux v0.17.1. Добавлены Bitrix24, Mixed/Striped-группы, параметры каналов/сетей, исходящий SOCKS5-прокси для L4, полноэкранный режим Telemost SFU 1080p, защита от передачи cookie аккаунтов клиентами (--refuse-peer-login), пиннинг и адаптивный MTU. Аудит и перенос локальных патчей описаны в документации.
 
 - 🚀 **Управление туннелями**: создание, редактирование, запуск и остановка серверных L3/L4-туннелей OpenFlux, поддержка Multi-конфигураций и различных сетевых транспортов.
 - 📊 **Мониторинг и метрики**: отображение скорости приёма/передачи в реальном времени, учёт трафика, загрузки CPU, RAM и диска сервера.
@@ -76,32 +76,32 @@
 #### Linux
 В системе должен быть установлен `curl` (при необходимости: `sudo apt install -y curl`):
 ```bash
-curl -sSL https://raw.githubusercontent.com/BizhQwe/openflux-zen-server/main/scripts/install.sh | sudo sh
+curl -sSL https://raw.githubusercontent.com/BizhQwe/openflux-server/main/scripts/install.sh | sudo sh
 ```
 
 #### Windows
 Откройте **PowerShell от имени администратора** и выполните:
 ```powershell
-irm https://raw.githubusercontent.com/BizhQwe/openflux-zen-server/main/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/BizhQwe/openflux-server/main/scripts/install.ps1 | iex
 ```
 
 ### Вариант 2: Загрузка готового установщика (GitHub Releases)
 
-Перейдите на страницу [GitHub Releases](https://github.com/BizhQwe/openflux-zen-server/releases) и скачайте файл установщика для своей системы:
+Перейдите на страницу [GitHub Releases](https://github.com/BizhQwe/openflux-server/releases) и скачайте файл установщика для своей системы:
 
 | Платформа | Архитектуры | Файл установщика |
 |---|---|---|
-| **Linux** | `amd64`, `arm64`, `386`, `armv7` | `openflux-zen-server-installer-linux-<arch>` |
-| **Windows** | `amd64`, `arm64`, `386` | `openflux-zen-server-installer-windows-<arch>.exe` |
+| **Linux** | `amd64`, `arm64`, `386`, `armv7` | `openflux-server-installer-linux-<arch>` |
+| **Windows** | `amd64`, `arm64`, `386` | `openflux-server-installer-windows-<arch>.exe` |
 
 Запустите скачанный файл:
 ```bash
 # Linux (с правами root / sudo)
-chmod +x openflux-zen-server-installer-linux-amd64
-sudo ./openflux-zen-server-installer-linux-amd64
+chmod +x openflux-server-installer-linux-amd64
+sudo ./openflux-server-installer-linux-amd64
 
 # Windows
-.\openflux-zen-server-installer-windows-amd64.exe
+.\openflux-server-installer-windows-amd64.exe
 ```
 
 ### Параметры тихой установки и тонкой настройки
@@ -110,7 +110,7 @@ sudo ./openflux-zen-server-installer-linux-amd64
 
 ```bash
 # Пример: тихая установка на порту 8080 с режимом domain и автозапуском
-sudo ./openflux-zen-server-installer-linux-amd64 --silent --mode domain --domain "vpn.example.com" --port 8080 --lang ru --autostart on
+sudo ./openflux-server-installer-linux-amd64 --silent --mode domain --domain "vpn.example.com" --port 8080 --lang ru --autostart on
 ```
 
 | Параметр | По умолчанию | Описание |
@@ -122,7 +122,7 @@ sudo ./openflux-zen-server-installer-linux-amd64 --silent --mode domain --domain
 | `--lang <ru\|en>` | `ru` / `en` | Язык интерфейса мастера и панели |
 | `--autostart <on\|off>` | `on` | Автозапуск службы при старте ОС |
 | `--silent` | `false` | Тихий режим (без интерактивных вопросов мастера) |
-| `--dir <path>` | `/opt/openflux-zen-server` или `Program Files` | Каталог установки |
+| `--dir <path>` | `/opt/openflux-server` или `Program Files` | Каталог установки |
 | `--no-service` | `false` | Установить бинарники без регистрации системной службы |
 | `--reset-password` | `false` | Сгенерировать новый пароль при обновлении |
 | `--verify` | `false` | Проверить целостность встроенного архива и выйти |
@@ -177,7 +177,7 @@ openflux <команда> [параметры]
 
 ## Сетевые режимы и публикация
 
-OpenFlux Zen Server поддерживает четыре сценария сетевого размещения:
+OpenFlux Server поддерживает четыре сценария сетевого размещения:
 
 1. **Публичный IP / Домен (`domain`)**:
    - Стандартный режим для VPS с внешним IP-адресом.
@@ -194,17 +194,17 @@ OpenFlux Zen Server поддерживает четыре сценария се�
 
 ```text
 src/
-  OpenFlux.Zen.Server.Core/       # Ядро OpenFlux (туннелирование, L3/L4, сетевые протоколы)
-  OpenFlux.Zen.Server.Web/        # Веб-панель: HTTP API, аутентификация, хранилище и встроенный UI
-  OpenFlux.Zen.Server.Cli/        # Консольная утилита управления установленной службой (openflux)
-  OpenFlux.Zen.Server.Installer/  # Единый самораспаковывающийся установщик
+  core/       # Ядро OpenFlux (туннелирование, L3/L4, сетевые протоколы)
+  web/        # Веб-панель: HTTP API, аутентификация, хранилище и встроенный UI
+  cli/        # Консольная утилита управления установленной службой (openflux)
+  installer/  # Единый самораспаковывающийся установщик
 scripts/                          # Скрипты сборки (build.sh / build.ps1) и установки
 docs/screenshots/                 # Скриншоты веб-интерфейса
 dist/                             # Скомпилированные исполняемые файлы и релизные пакеты
 go.work                           # Go workspace проекта
 ```
 
-Исходный код веб-интерфейса находится в каталоге `src/OpenFlux.Zen.Server.Web/internal/panel/web`. Все шаблоны, скрипты, стили и изображения упаковываются в исполняемый файл через `go:embed`.
+Исходный код веб-интерфейса находится в каталоге `src/web/internal/panel/web`. Все шаблоны, скрипты, стили и изображения упаковываются в исполняемый файл через `go:embed`.
 
 ## Сборка из исходников
 
@@ -213,8 +213,8 @@ go.work                           # Go workspace проекта
 
 Клонируйте репозиторий:
 ```bash
-git clone https://github.com/BizhQwe/openflux-zen-server.git
-cd openflux-zen-server
+git clone https://github.com/BizhQwe/openflux-server.git
+cd openflux-server
 ```
 
 ### Сборка под текущую платформу
@@ -237,7 +237,7 @@ sh scripts/build.sh
 powershell -ExecutionPolicy Bypass -File scripts\build.ps1
 ```
 
-Готовые бинарники и самодостаточные файлы установщиков (`openflux-zen-server-installer-*`) вместе с SHA-256 хэшами будут сохранены в каталоге `dist/`.
+Готовые бинарники и самодостаточные файлы установщиков (`openflux-server-installer-*`) вместе с SHA-256 хэшами будут сохранены в каталоге `dist/`.
 
 Список платформ общий для всех скриптов: [scripts/targets.txt](scripts/targets.txt). Флаги `--all` / `-All` также поддерживаются; конкретную платформу можно выбрать, как в примерах выше.
 

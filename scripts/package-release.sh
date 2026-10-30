@@ -41,7 +41,7 @@ set --
 for target in $targets; do
     suffix=''
     case "$target" in windows-*) suffix='.exe' ;; esac
-    asset="openflux-zen-server-installer-$target$suffix"
+    asset="openflux-server-installer-$target$suffix"
     if [ ! -s "$input_dir/$asset" ] || [ ! -s "$input_dir/$asset.sha256" ]; then
         echo "Missing installer or SHA-256: $asset" >&2
         exit 1

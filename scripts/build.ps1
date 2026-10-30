@@ -12,12 +12,12 @@ foreach ($target in $Targets) { if ($target -notin $allowed) { throw "Unsupporte
 $previous = @{}
 foreach ($name in @('GOOS','GOARCH','GOARM','CGO_ENABLED')) { $previous[$name] = [Environment]::GetEnvironmentVariable($name,'Process') }
 Push-Location $projectRoot
-$bundlePath = Join-Path $projectRoot 'src\OpenFlux.Zen.Server.Installer\payload\bundle.zip'
+$bundlePath = Join-Path $projectRoot 'src\installer\payload\bundle.zip'
 function Invoke-Go([string[]]$GoArgs) { & $Go @GoArgs; if ($LASTEXITCODE -ne 0) { throw "Go failed: $($GoArgs -join ' ')" } }
 try {
     $hostOS = (& $Go env GOHOSTOS).Trim()
     $hostArch = (& $Go env GOHOSTARCH).Trim()
-    if ($Test) { Invoke-Go @('test','./src/OpenFlux.Zen.Server.Core/...','./src/OpenFlux.Zen.Server.Web/...','./src/OpenFlux.Zen.Server.Installer/...','./src/OpenFlux.Zen.Server.Cli/...') }
+    if ($Test) { Invoke-Go @('test','./src/core/...','./src/web/...','./src/installer/...','./src/cli/...') }
     $dist = Join-Path $projectRoot 'dist'
     New-Item -ItemType Directory -Force -Path $dist | Out-Null
     foreach ($target in $Targets) {
@@ -32,19 +32,19 @@ try {
         $bin = Join-Path $dist $target
         New-Item -ItemType Directory -Force -Path $bin | Out-Null
         Write-Host "Building $target"
-        Invoke-Go @('build','-trimpath','-ldflags=-s -w','-o',(Join-Path $bin "openflux-zen-server-core$suffix"),'./src/OpenFlux.Zen.Server.Core')
-        Invoke-Go @('build','-trimpath','-ldflags=-s -w','-o',(Join-Path $bin "openflux-zen-server-web$suffix"),'./src/OpenFlux.Zen.Server.Web')
-        Invoke-Go @('build','-trimpath','-ldflags=-s -w','-o',(Join-Path $bin "openflux-zen-server-cli$suffix"),'./src/OpenFlux.Zen.Server.Cli')
+        Invoke-Go @('build','-trimpath','-ldflags=-s -w','-o',(Join-Path $bin "openflux-server-core$suffix"),'./src/core')
+        Invoke-Go @('build','-trimpath','-ldflags=-s -w','-o',(Join-Path $bin "openflux-server-web$suffix"),'./src/web')
+        Invoke-Go @('build','-trimpath','-ldflags=-s -w','-o',(Join-Path $bin "openflux-server-cli$suffix"),'./src/cli')
         $env:GOOS = $hostOS
         $env:GOARCH = $hostArch
         $env:GOARM = ''
         $goArch = if ($targetArch -eq 'armv7') { 'arm' } else { $targetArch }
-        Invoke-Go @('run','./src/OpenFlux.Zen.Server.Installer/cmd/bundle','--os',$targetOS,'--arch',$goArch,'--dir',$bin,'--out',$bundlePath)
+        Invoke-Go @('run','./src/installer/cmd/bundle','--os',$targetOS,'--arch',$goArch,'--dir',$bin,'--out',$bundlePath)
         $env:GOOS = $targetOS
         $env:GOARCH = $goArch
         $env:GOARM = if ($targetArch -eq 'armv7') { '7' } else { '' }
-        $installer = Join-Path $dist "openflux-zen-server-installer-$target$suffix"
-        Invoke-Go @('build','-trimpath','-ldflags=-s -w','-o',$installer,'./src/OpenFlux.Zen.Server.Installer')
+        $installer = Join-Path $dist "openflux-server-installer-$target$suffix"
+        Invoke-Go @('build','-trimpath','-ldflags=-s -w','-o',$installer,'./src/installer')
         $hashStream = [IO.File]::OpenRead($installer)
         $hasher = [Security.Cryptography.SHA256]::Create()
         try {
@@ -56,7 +56,7 @@ try {
         $checksumLine = $installerHash + '  ' + (Split-Path -Leaf $installer) + "`n"
         [IO.File]::WriteAllText("$installer.sha256", $checksumLine, [Text.Encoding]::ASCII)
         Remove-Item -LiteralPath $bundlePath
-        foreach ($oldName in @("openflux-core$suffix", "openflux-zen-server$suffix", "openflux$suffix")) {
+        foreach ($oldName in @("openflux-core$suffix", "openflux-server$suffix", "openflux$suffix")) {
             $oldFile = Join-Path $bin $oldName
             if (Test-Path -LiteralPath $oldFile) { Remove-Item -LiteralPath $oldFile }
         }

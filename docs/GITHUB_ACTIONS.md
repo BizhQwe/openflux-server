@@ -6,7 +6,7 @@ Workflow: [`.github/workflows/build.yml`](../.github/workflows/build.yml).
 
 ## Сборка без публикации
 
-Откройте **Actions → Build OpenFlux Zen Server → Run workflow**, выберите ветку и запустите сборку вручную. При обычном push в `main` / `master` и pull request выполняются только быстрые тесты (`checks`), а сборка семи установщиков запускается при создании тега `v*` (релиза) или вручную через `workflow_dispatch`.
+Откройте **Actions → Build OpenFlux Server → Run workflow**, выберите ветку и запустите сборку вручную. При обычном push в `main` / `master` и pull request выполняются только быстрые тесты (`checks`), а сборка семи установщиков запускается при создании тега `v*` (релиза) или вручную через `workflow_dispatch`.
 
 В тестах проверяются `go test` и `go vet` на Windows и Linux. Для интеграционного теста PHP-узла workflow устанавливает PHP 8.5 с OpenSSL на обеих ОС и проверяет его до запуска Go-тестов. Отсутствие PHP в CI считается ошибкой. Тестовые пакеты выполняются по два одновременно с `GOMAXPROCS=2`, чтобы несколько тяжёлых сетевых сценариев не перегружали runner.
 
@@ -16,13 +16,13 @@ PHP нужен для тестов исходного ядра и не вход�
 
 | Платформа | Файл |
 |---|---|
-| Windows x64 | `openflux-zen-server-installer-windows-amd64.exe` |
-| Windows ARM64 | `openflux-zen-server-installer-windows-arm64.exe` |
-| Windows x86 | `openflux-zen-server-installer-windows-386.exe` |
-| Linux x64 | `openflux-zen-server-installer-linux-amd64` |
-| Linux ARM64 | `openflux-zen-server-installer-linux-arm64` |
-| Linux x86 | `openflux-zen-server-installer-linux-386` |
-| Linux ARMv7 | `openflux-zen-server-installer-linux-armv7` |
+| Windows x64 | `openflux-server-installer-windows-amd64.exe` |
+| Windows ARM64 | `openflux-server-installer-windows-arm64.exe` |
+| Windows x86 | `openflux-server-installer-windows-386.exe` |
+| Linux x64 | `openflux-server-installer-linux-amd64` |
+| Linux ARM64 | `openflux-server-installer-linux-arm64` |
+| Linux x86 | `openflux-server-installer-linux-386` |
+| Linux ARMv7 | `openflux-server-installer-linux-armv7` |
 
 Файлы находятся в разделе **Artifacts** завершённого запуска. У каждого установщика есть файл `.sha256`. Артефакты хранятся 14 дней. Каждый установщик содержит ядро, веб-панель и CLI; отдельные бинарники для установки не нужны.
 

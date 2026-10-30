@@ -26,7 +26,7 @@ $assets = @()
 $checksums = @()
 foreach ($target in $targets) {
     $suffix = if ($target.StartsWith('windows-')) { '.exe' } else { '' }
-    $asset = "openflux-zen-server-installer-$target$suffix"
+    $asset = "openflux-server-installer-$target$suffix"
     $installer = Join-Path $inputPath $asset
     $sidecar = "$installer.sha256"
     foreach ($path in @($installer, $sidecar)) {

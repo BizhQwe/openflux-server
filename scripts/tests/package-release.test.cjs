@@ -20,7 +20,7 @@ test('release packaging contains only installers and checksums and removes stale
   const expected = ['SHA256SUMS.txt'];
   const installers = [];
   for (const target of targets) {
-    const asset = `openflux-zen-server-installer-${target}${target.startsWith('windows-') ? '.exe' : ''}`;
+    const asset = `openflux-server-installer-${target}${target.startsWith('windows-') ? '.exe' : ''}`;
     const payload = Buffer.from(`dummy ${target}`);
     fs.writeFileSync(path.join(release, asset), payload);
     fs.writeFileSync(path.join(release, asset + '.sha256'), crypto.createHash('sha256').update(payload).digest('hex') + '  ' + asset + '\n');

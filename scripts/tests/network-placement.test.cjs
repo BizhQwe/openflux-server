@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
-const source = fs.readFileSync(path.join(__dirname, '../../src/OpenFlux.Zen.Server.Web/internal/panel/web/js/pages/settings.js'), 'utf8');
+const source = fs.readFileSync(path.join(__dirname, '../../src/web/internal/panel/web/js/pages/settings.js'), 'utf8');
 
 function setup(href = 'http://panel.example.test:5000/secret/') {
   const nodes = new Map();

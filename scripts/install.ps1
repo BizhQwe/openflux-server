@@ -1,5 +1,5 @@
 # ==============================================================================
-# OpenFlux Zen Server - Fast 1-Command Bootstrap Installer (Windows)
+# OpenFlux Server - Fast 1-Command Bootstrap Installer (Windows)
 # Supports: Windows x64, Windows ARM64, Windows x86
 # ==============================================================================
 
@@ -97,12 +97,12 @@ try {
         } finally { $cancel.Cancel(); $cancel.Dispose() }
     }
 
-    $asset = "openflux-zen-server-installer-$arch.exe"
+    $asset = "openflux-server-installer-$arch.exe"
     $installerExe = Join-Path $tempDir $asset
     $checksumFile = Join-Path $tempDir 'installer.sha256'
-    $repo = if ($env:OPENFLUX_REPOSITORY) { $env:OPENFLUX_REPOSITORY } else { 'BizhQwe/openflux-zen-server' }
+    $repo = if ($env:OPENFLUX_REPOSITORY) { $env:OPENFLUX_REPOSITORY } else { 'BizhQwe/openflux-server' }
     $bases = @("https://github.com/$repo/releases/latest/download", "https://github.com/$repo/releases/download/v1.1.2")
-    Write-Host "`n  OpenFlux Zen Server - Windows ($displayArch)" -ForegroundColor Cyan
+    Write-Host "`n  OpenFlux Server - Windows ($displayArch)" -ForegroundColor Cyan
     Write-Host '  Downloading and verifying installer...' -ForegroundColor Gray
     $downloaded = $false
     foreach ($base in $bases) {
@@ -124,7 +124,7 @@ try {
 } finally {
     if ($client) { $client.Dispose() }
     if ($handler) { $handler.Dispose() }
-    foreach ($name in @("openflux-zen-server-installer-$arch.exe", 'installer.sha256')) {
+    foreach ($name in @("openflux-server-installer-$arch.exe", 'installer.sha256')) {
         $entry = Join-Path $tempDir $name
         if (Test-Path -LiteralPath $entry) { Remove-Item -LiteralPath $entry -Force }
     }

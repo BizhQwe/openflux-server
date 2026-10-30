@@ -75,10 +75,10 @@ phpbox_bundle/
 /stress-out/
 /stresstest/
 
-# Zen Server local builds and state
+# OpenFlux Server local builds and state
 /dist/
 **/payload/bundle.zip
 **/data/
 *.key
-/src/OpenFlux.Zen.Server.Web/panel.exe
+/src/web/panel.exe
 go.work.sum
