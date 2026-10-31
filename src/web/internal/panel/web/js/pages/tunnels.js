@@ -543,7 +543,7 @@ function showTunnelConnect(id) {
 }
 
 const AUTO_ROOM_TRANSPORTS = new Set(['cupsonline', 'avito']);
-const REQUIRED_URL_TRANSPORTS = new Set(['yandex', 'mailru', 'vyandex', 'boards', 'telemost', 'bitrix24', 'mixed']);
+const REQUIRED_URL_TRANSPORTS = new Set(['yandex', 'mailru', 'vyandex', 'boards', 'telemost', 'bitrix24']);
 
 function selectTransport(transportName) {
   const select = document.getElementById('tunnel-transport');
@@ -723,7 +723,6 @@ function onTransportChange() {
 
 const MULTI_TRANSPORT_TYPES = [
   ['bitrix24', 'Bitrix24'],
-  ['mixed', 'Mixed / Striped'],
   ['script', 'Script / .flux'],
   ['direct', 'Direct TCP'],
   ['avito', 'Avito'],
@@ -754,7 +753,13 @@ function createMultiTransportRow(config = {}) {
       <button type="button" class="btn btn-outline btn-sm multi-transport-remove" title="Удалить транспорт" aria-label="Удалить">✕</button>
     </div>`;
   const typeSelect = row.querySelector('.multi-transport-type');
-  typeSelect.value = MULTI_TRANSPORT_TYPES.some(([v]) => v === type) ? type : 'yandex';
+  if (type === 'mixed') {
+    const opt = document.createElement('option');
+    opt.value = 'mixed';
+    opt.textContent = 'Mixed / Striped';
+    typeSelect.appendChild(opt);
+  }
+  typeSelect.value = (type === 'mixed' || MULTI_TRANSPORT_TYPES.some(([v]) => v === type)) ? type : 'yandex';
   row.querySelector('.multi-transport-value').value = config.value || '';
   row.querySelector('.multi-transport-secondary').value = config.secondary || '';
   typeSelect.addEventListener('change', () => {

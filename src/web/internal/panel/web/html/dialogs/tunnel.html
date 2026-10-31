@@ -140,15 +140,6 @@
                   <span class="transport-card-sub" data-i18n="bitrix24_desc">Чат портала</span>
                 </div>
               </div>
-              <div class="transport-card" data-transport="mixed" onclick="selectTransport('mixed')">
-                <div class="transport-card-icon transport-icon-multi">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h5l6 14h5M4 19h5L15 5h5"/></svg>
-                </div>
-                <div class="transport-card-info">
-                  <span class="transport-card-title">Mixed / Striped</span>
-                  <span class="transport-card-sub" data-i18n="mixed_desc">Объединение каналов</span>
-                </div>
-              </div>
               <div class="transport-card" data-transport="script" onclick="selectTransport('script')">
                 <div class="transport-card-icon transport-icon-script">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
@@ -174,7 +165,6 @@
               <option value="boards">boards (Yandex Boards)</option>
               <option value="oneme">oneme (MAX / OneMe)</option>
               <option value="bitrix24">bitrix24 (Bitrix24)</option>
-              <option value="mixed">mixed (Striped)</option>
             </select>
           </div>
 
@@ -300,15 +290,14 @@
                 </div>
               </div>
 
-              <div class="form-row">
-                <div id="group-lanes" class="form-group">
-                  <label for="tunnel-lanes" data-i18n="carrier_lanes">Количество каналов (0 — авто)</label>
-                  <input type="number" id="tunnel-lanes" class="form-control" min="0" max="64" value="0" />
-                </div>
-                <div class="form-group">
-                  <label for="tunnel-upstream-proxy" data-i18n="upstream_proxy">Исходящий SOCKS5-прокси (L4)</label>
-                  <input type="text" id="tunnel-upstream-proxy" class="form-control" placeholder="127.0.0.1:10808" />
-                </div>
+              <div id="group-lanes" class="form-group" style="display: none;">
+                <label for="tunnel-lanes" data-i18n="carrier_lanes">Количество каналов (0 — авто)</label>
+                <input type="number" id="tunnel-lanes" class="form-control" min="0" max="64" value="0" />
+              </div>
+
+              <div class="form-group">
+                <label for="tunnel-upstream-proxy" data-i18n="upstream_proxy">Исходящий SOCKS5-прокси (L4)</label>
+                <input type="text" id="tunnel-upstream-proxy" class="form-control" placeholder="127.0.0.1:10808" />
               </div>
               <div class="form-group">
                 <label for="tunnel-transport-options" data-i18n="carrier_options">Дополнительные параметры транспортов (JSON)</label>

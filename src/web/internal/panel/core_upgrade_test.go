@@ -91,11 +91,12 @@ func TestNewOptionsCannotOverrideServerPolicy(t *testing.T) {
 	}
 }
 
-func TestMixedAndBitrix24AssetsAreEmbedded(t *testing.T) {
-	for _, kind := range []string{"mixed", "bitrix24"} {
-		if !strings.Contains(string(indexPage), `data-transport="`+kind+`"`) || !strings.Contains(string(indexPage), `<option value="`+kind+`"`) {
-			t.Fatalf("missing %s controls", kind)
-		}
+func TestBitrix24AssetsAreEmbeddedAndMixedIsRemoved(t *testing.T) {
+	if !strings.Contains(string(indexPage), `data-transport="bitrix24"`) || !strings.Contains(string(indexPage), `<option value="bitrix24"`) {
+		t.Fatalf("missing bitrix24 controls")
+	}
+	if strings.Contains(string(indexPage), `data-transport="mixed"`) || strings.Contains(string(indexPage), `<option value="mixed"`) {
+		t.Fatalf("mixed controls must not be present in interface")
 	}
 	if _, err := assets.ReadFile("web/images/transport-bitrix24.png"); err != nil {
 		t.Fatal(err)

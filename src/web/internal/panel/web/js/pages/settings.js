@@ -933,7 +933,7 @@ async function openRollbackModal(type) {
 
   if (type === 'panel') {
     if (titleEl) titleEl.textContent = isRu ? 'Смена версии OpenFlux Server' : 'Change OpenFlux Server Version';
-    const curVer = (panelInfoCache && panelInfoCache.currentVersion) ? panelInfoCache.currentVersion : 'v1.2.0';
+    const curVer = (panelInfoCache && panelInfoCache.currentVersion) ? panelInfoCache.currentVersion : 'v1.2.1';
     if (descEl) {
       descEl.innerHTML = isRu 
         ? `Текущая версия: <strong>${escapeHtml(curVer)}</strong>. Выберите версию из официальных релизов GitHub (BizhQwe/openflux-server) для установки:`
