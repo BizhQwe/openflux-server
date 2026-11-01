@@ -148,13 +148,13 @@ Once installation completes:
 4. **Connect Clients**:
    - Click on the created tunnel to view connection parameters.
    - Copy the connection URL or scan the **QR code** using an OpenFlux client app.
-   - 📱 **For Android, use the official client:** [**OpenFlux Android**](https://github.com/BizhQwe/openflux-android) — optimized client supporting all modern OpenFlux transports and configurations.
+   - 📱 **For Android, use the client:** [**OpenFlux Android**](https://github.com/BizhQwe/openflux-android) (fork of [damnurmum/OpenFlux-Android](https://github.com/damnurmum/OpenFlux-Android)) — the core in the application is updated jointly with the server to ensure seamless compatibility.
 
 ## Client Applications
 
 To connect your devices to your OpenFlux Server, use compatible clients:
 
-- 📱 **Android**: [**OpenFlux Android** (BizhQwe/openflux-android)](https://github.com/BizhQwe/openflux-android) — recommended client for Android. Supports fast tunnel import via QR code and `openflux://` links, auto-reconnect, and full suite of network transports.
+- 📱 **Android**: [**OpenFlux Android** (BizhQwe/openflux-android)](https://github.com/BizhQwe/openflux-android) — recommended Android client (fork of [damnurmum/OpenFlux-Android](https://github.com/damnurmum/OpenFlux-Android)). The core in the client application is updated jointly with the server to ensure maximum stability and full protocol/transport compatibility. Supports fast tunnel import via QR code and `openflux://` links, auto-reconnect, and full suite of network transports.
 
 > [!TIP]
 > Forgot your password or lost the panel link? Run this command on the server:

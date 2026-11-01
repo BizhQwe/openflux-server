@@ -4,6 +4,7 @@ package firewall
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"strconv"
 )
@@ -14,6 +15,9 @@ func runCmd(name string, args ...string) error {
 }
 
 func openOSPort(port int, appName, appPath string) error {
+	if os.Geteuid() != 0 {
+		return nil
+	}
 	portStr := strconv.Itoa(port)
 	tcpPort := fmt.Sprintf("%d/tcp", port)
 	comment := fmt.Sprintf("OpenFlux %s", appName)
@@ -57,6 +61,9 @@ func openOSPort(port int, appName, appPath string) error {
 }
 
 func closeOSPort(port int, appName string) error {
+	if os.Geteuid() != 0 {
+		return nil
+	}
 	portStr := strconv.Itoa(port)
 	tcpPort := fmt.Sprintf("%d/tcp", port)
 

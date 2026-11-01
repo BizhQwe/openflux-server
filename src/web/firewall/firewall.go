@@ -15,29 +15,33 @@ var (
 // OpenPorts ensures the given TCP ports are allowed in the system firewall
 // (UFW, firewalld, iptables on Linux; Windows Defender Firewall on Windows)
 // and attempts router port forwarding via UPnP.
+// Port opening is executed asynchronously in the background so it never blocks
+// the caller or delays network operations.
 func OpenPorts(ports []int, appName, appPath string) error {
 	openedMu.Lock()
-	defer openedMu.Unlock()
-
-	var firstErr error
+	var valid []int
 	for _, port := range ports {
-		if port <= 0 || port > 65535 {
-			continue
+		if port > 0 && port <= 65535 {
+			openedPorts[port] = true
+			valid = append(valid, port)
 		}
-		if err := openOSPort(port, appName, appPath); err != nil && firstErr == nil {
-			firstErr = err
-		}
-		openedPorts[port] = true
+	}
+	openedMu.Unlock()
+
+	if len(valid) == 0 {
+		return nil
 	}
 
-	// Trigger asynchronous UPnP router port forwarding with timeout
-	go func(portsToMap []int) {
+	go func(portsToOpen []int) {
+		for _, port := range portsToOpen {
+			_ = openOSPort(port, appName, appPath)
+		}
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		_ = ForwardPortsUPnP(ctx, portsToMap, appName)
-	}(append([]int(nil), ports...))
+		_ = ForwardPortsUPnP(ctx, portsToOpen, appName)
+	}(valid)
 
-	return firstErr
+	return nil
 }
 
 // OpenPort allows a single TCP port in the OS firewall and UPnP.

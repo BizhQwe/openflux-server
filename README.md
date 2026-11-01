@@ -147,13 +147,13 @@ sudo ./openflux-server-installer-linux-amd64 --silent --mode domain --domain "vp
 4. **Подключите клиентов**:
    - Нажмите на созданный туннель, чтобы открыть параметры подключения.
    - Скопируйте готовую ссылку подключения или отсканируйте **QR-код** в приложении-клиенте OpenFlux.
-   - 📱 **Для Android используйте клиент:** [**OpenFlux Android**](https://github.com/BizhQwe/openflux-android) — оптимизированный клиент с поддержкой всех современных транспортов и конфигураций OpenFlux.
+   - 📱 **Для Android используйте клиент:** [**OpenFlux Android**](https://github.com/BizhQwe/openflux-android) (форк [damnurmum/OpenFlux-Android](https://github.com/damnurmum/OpenFlux-Android)) — ядро в приложении обновляется совместно с сервером для обеспечения полной совместимости.
 
 ## Клиентские приложения
 
 Для подключения устройств к вашему серверу OpenFlux используйте совместимые клиенты:
 
-- 📱 **Android**: [**OpenFlux Android** (BizhQwe/openflux-android)](https://github.com/BizhQwe/openflux-android) — рекомендуемый клиент для Android. Поддерживает быстрое добавление туннелей по QR-коду и ссылке `openflux://`, автоматическое переподключение и полный набор сетевых транспортов.
+- 📱 **Android**: [**OpenFlux Android** (BizhQwe/openflux-android)](https://github.com/BizhQwe/openflux-android) — рекомендуемый клиент для Android (форк [damnurmum/OpenFlux-Android](https://github.com/damnurmum/OpenFlux-Android)). Ядро в клиентском приложении обновляется совместно с сервером для обеспечения стабильной работы и полной совместимости всех протоколов и транспортов. Поддерживает быстрое добавление туннелей по QR-коду и ссылке `openflux://`, автореконнект и актуальные сетевые настройки.
 
 > [!TIP]
 > Если вы забыли пароль, логин или потеряли ссылку на панель, выполните команду на сервере:
