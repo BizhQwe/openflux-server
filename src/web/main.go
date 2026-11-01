@@ -8,11 +8,14 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
 
+	"net"
 	"openflux.local/server/panel/configuration"
+	"openflux.local/server/panel/firewall"
 	"openflux.local/server/panel/internal/hosting"
 	"openflux.local/server/panel/internal/panel"
 )
@@ -67,6 +70,7 @@ func run() error {
 		defer unlock()
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 		defer cancel()
+		_ = firewall.OpenPort(80, "ACME HTTP")
 		cert, key, err := configuration.IssueTLS(ctx, store.Dir, settings.Domain)
 		if err != nil {
 			return err
@@ -124,6 +128,19 @@ func run() error {
 	server.SetNetworkApply(httpServer.Apply)
 	if _, e = httpServer.Apply(settings); e != nil {
 		manager.SystemLog("error", "HTTP-сервер панели: %v", e)
+
+	panelPort := 5000
+	if _, p, splitErr := net.SplitHostPort(settings.Listen); splitErr == nil {
+		if n, parseErr := strconv.Atoi(p); parseErr == nil && n > 0 {
+			panelPort = n
+		}
+	}
+	portsToOpen := []int{panelPort}
+	if settings.DomainEnabled {
+		portsToOpen = append(portsToOpen, 80, 443)
+	}
+	_ = firewall.OpenPorts(portsToOpen, "Panel & Web", executable)
+
 		return e
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

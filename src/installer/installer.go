@@ -16,6 +16,7 @@ import (
 
 	"openflux.local/server/installer/internal/terminal"
 	"openflux.local/server/panel/configuration"
+	"openflux.local/server/panel/firewall"
 	"openflux.local/server/panel/publication"
 )
 
@@ -244,6 +245,7 @@ func run() (result error) {
 			}
 			cert, key, err := configuration.FindDomainTLS(data, next.Domain, next.TLSCert, next.TLSKey)
 			if err != nil {
+				_ = firewall.OpenPort(80, "ACME HTTP")
 				ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 				cert, key, err = issueTLS(ctx, data, next.Domain)
 				cancel()
@@ -276,6 +278,19 @@ func run() (result error) {
 		unlock = nil
 		if !opts.NoService {
 			if err = registerService(dir, opts.Autostart); err != nil {
+
+			panelPort := 5000
+			if _, p, splitErr := net.SplitHostPort(next.Listen); splitErr == nil {
+				if n, parseErr := strconv.Atoi(p); parseErr == nil && n > 0 {
+					panelPort = n
+				}
+			}
+			portsToOpen := []int{panelPort}
+			if next.DomainEnabled || opts.Mode == "domain" {
+				portsToOpen = append(portsToOpen, 80, 443)
+			}
+			_, webExe := executableNames()
+			_ = firewall.OpenPorts(portsToOpen, "Panel & Web", filepath.Join(dir, webExe))
 				return fmt.Errorf("files installed in %s, but service registration failed: %w", dir, err)
 			}
 			if err = runInstalled(dir, "__path", "install", "--dir", dir); err != nil {

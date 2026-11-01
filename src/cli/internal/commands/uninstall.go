@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"openflux.local/server/cli/internal/platform"
 	"openflux.local/server/panel/configuration"
+	"openflux.local/server/panel/firewall"
 	"openflux.local/server/panel/l3guard"
 	"path/filepath"
 	"strings"
@@ -69,6 +70,7 @@ func (a *App) uninstall() error {
 		_ = unlock()
 		return e
 	}
+	_ = firewall.RemoveAll("Panel & Web", platform.PanelPath(a.Options.Dir))
 	if e = unlock(); e != nil {
 		return e
 	}

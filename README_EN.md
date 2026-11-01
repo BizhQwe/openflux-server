@@ -36,6 +36,7 @@ The core is updated to OpenFlux v0.17.1, with Bitrix24, Mixed/Striped groups, pe
 - 📊 **Real-Time Monitoring**: Live upload/download bandwidth graphs, traffic consumption stats, and host resource usage (CPU, RAM, Disk).
 - 📜 **Live Logs**: Built-in core and system log viewer with filtering and auto-scroll.
 - 📱 **Instant Client Onboarding**: Automatic generation of compatible connection links and QR codes for OpenFlux client applications.
+- 🔓 **Automatic Port Opening**: When deploying or configuring a domain, the server automatically manages OS firewall rules (UFW, firewalld, iptables on Linux; Windows Defender Firewall on Windows) and forwards router ports via UPnP IGD.
 - 🌐 **4 Network Accessibility Modes**:
   - `domain` — Public IP connection or custom domain via Reverse Proxy (Caddy, Nginx).
   - `localtunnel` — Built-in public relay publication without requiring a dedicated public IP or port forwarding (NAT traversal).
@@ -147,6 +148,13 @@ Once installation completes:
 4. **Connect Clients**:
    - Click on the created tunnel to view connection parameters.
    - Copy the connection URL or scan the **QR code** using an OpenFlux client app.
+   - 📱 **For Android, use the official client:** [**OpenFlux Android**](https://github.com/BizhQwe/openflux-android) — optimized client supporting all modern OpenFlux transports and configurations.
+
+## Client Applications
+
+To connect your devices to your OpenFlux Server, use compatible clients:
+
+- 📱 **Android**: [**OpenFlux Android** (BizhQwe/openflux-android)](https://github.com/BizhQwe/openflux-android) — recommended client for Android. Supports fast tunnel import via QR code and `openflux://` links, auto-reconnect, and full suite of network transports.
 
 > [!TIP]
 > Forgot your password or lost the panel link? Run this command on the server:
