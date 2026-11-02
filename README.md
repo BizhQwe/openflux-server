@@ -124,6 +124,8 @@ sudo ./openflux-server-installer-linux-amd64 --silent --mode domain --domain "vp
 |---|---|---|
 | `--mode <mode>` | интерактивно (`domain`) | Сетевой режим: `domain`, `localtunnel`, `lan`, `localhost` |
 | `--port <port>` | `5000` | Порт веб-панели (от 1 до 65535) |
+| `--open-port <on|off>` | `on` | Открытие порта панели в системном брандмауэре (UFW / firewalld / iptables / Windows Defender) |
+| `--entware` | `false` | Установка на роутер с Entware (Keenetic / OpenWrt): регистрация службы `/opt/etc/init.d/S99openflux` и оптимизация памяти `GOMEMLIMIT=192MiB` |
 | `--listen <host:port>` | зависит от режима | Точный адрес хоста и порт прослушивания |
 | `--domain <url>` | пусто | Публичный домен или адрес обратного прокси |
 | `--lang <ru\|en>` | `ru` / `en` | Язык интерфейса мастера и панели |

@@ -125,6 +125,8 @@ sudo ./openflux-server-installer-linux-amd64 --silent --mode domain --domain "vp
 |---|---|---|
 | `--mode <mode>` | interactive (`domain`) | Network mode: `domain`, `localtunnel`, `lan`, `localhost` |
 | `--port <port>` | `5000` | Web panel port (1–65535) |
+| `--open-port <on|off>` | `on` | Open the panel port in the system firewall (UFW / firewalld / iptables / Windows Defender) |
+| `--entware` | `false` | Router installation with Entware (Keenetic / OpenWrt): registers SysVinit service `/opt/etc/init.d/S99openflux` and optimizes memory `GOMEMLIMIT=192MiB` |
 | `--listen <host:port>` | mode-dependent | Exact listening host and port |
 | `--domain <url>` | empty | Public domain or reverse proxy URL |
 | `--lang <en\|ru>` | `en` / `ru` | Language for installer and web panel |
