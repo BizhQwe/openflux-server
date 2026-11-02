@@ -8,7 +8,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"syscall"
 )
 
 func Hide(cmd *exec.Cmd)          {}
@@ -16,11 +15,11 @@ func PanelPath(dir string) string { return filepath.Join(dir, "openflux-server-w
 func IsAdmin() bool               { return os.Geteuid() == 0 }
 
 func isEntware() bool {
-	if _, err := exec.LookPath("systemctl"); err == nil {
-		return false
-	}
 	if fi, err := os.Stat("/opt/etc/init.d/S99openflux"); err == nil && !fi.IsDir() {
 		return true
+	}
+	if _, err := exec.LookPath("systemctl"); err == nil {
+		return false
 	}
 	if fi, err := os.Stat("/opt/etc/init.d"); err == nil && fi.IsDir() {
 		return true
@@ -43,16 +42,8 @@ func (c *Controller) Status(dir string) (Status, error) {
 		if err == nil {
 			pidStr := strings.TrimSpace(string(pidBytes))
 			if pid, err := strconv.Atoi(pidStr); err == nil && pid > 0 {
-				if proc, err := os.FindProcess(pid); err == nil {
-					if proc.Signal(syscall.Signal(0)) == nil {
-						if link, err := os.Readlink(fmt.Sprintf("/proc/%d/exe", pid)); err == nil {
-							if strings.Contains(link, "openflux-server-web") {
-								s.Running = true
-							}
-						} else {
-							s.Running = true
-						}
-					}
+				if fi, statErr := os.Stat(fmt.Sprintf("/proc/%d", pid)); statErr == nil && fi.IsDir() {
+					s.Running = true
 				}
 			}
 		}

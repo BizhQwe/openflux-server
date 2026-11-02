@@ -14,6 +14,9 @@ func isEntware() bool {
 	if forceEntware {
 		return true
 	}
+	if fi, err := os.Stat("/opt/etc/init.d/S99openflux"); err == nil && !fi.IsDir() {
+		return true
+	}
 	if _, err := exec.LookPath("systemctl"); err == nil {
 		return false
 	}
@@ -118,7 +121,13 @@ ENABLED=%s
 export GOMEMLIMIT=192MiB
 export GOGC=50
 
-running() { [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE" 2>/dev/null)" 2>/dev/null; }
+running() {
+    [ -f "$PIDFILE" ] || return 1
+    PID=$(cat "$PIDFILE" 2>/dev/null)
+    [ -n "$PID" ] || return 1
+    [ -d "/proc/$PID" ] || return 1
+    return 0
+}
 
 start() {
     [ "$ENABLED" = "yes" ] || { echo "$DESC disabled"; return 0; }

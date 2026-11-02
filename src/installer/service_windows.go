@@ -67,6 +67,7 @@ func registerService(dir string, autostart bool) error {
 		return e
 	}
 	path := temp.Name()
+	_ = temp.Close()
 	defer os.Remove(path)
 	units := utf16.Encode([]rune(taskXML(dir)))
 	data := make([]byte, 2+len(units)*2)
