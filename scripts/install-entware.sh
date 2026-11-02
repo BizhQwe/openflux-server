@@ -4,24 +4,25 @@
 #
 # Отличия от scripts/install.sh (systemd-версия):
 #   * нет systemd — служба ставится как /opt/etc/init.d/S99openflux
-#   * всё живёт в /opt (USB-накопитель), а не в /usr/local
+#   * программа живёт в /opt/openflux-server, а данные и конфиги — в
+#     /opt/etc/openflux-server (соглашение Entware), логи — в /opt/var/log
+#   * system.log вынесен в /opt/var/log/openflux-system.log (симлинк из каталога данных)
 #   * порт панели открывается в iptables ПЕРЕД цепочкой _NDM_ACL_IN,
 #     иначе Keenetic режет входящие (-P INPUT DROP)
 #   * ограничение памяти через GOMEMLIMIT/GOGC (на роутере ~500 МБ RAM)
-#   * проверка свопа, места на /opt и занятости порта до установки
 #
 # Использование (на роутере, от root):
 #   sh install-entware.sh                 # LAN + localtunnel, порт 5000
 #   sh install-entware.sh --lan-only      # только локальная сеть
 #   sh install-entware.sh --port 8080
 #   sh install-entware.sh --uninstall
-#   curl -fsSL <raw-url> | sh
 # ==============================================================================
 
 set -eu
 
 REPO="${OPENFLUX_REPOSITORY:-BizhQwe/openflux-server}"
 INSTALL_DIR="${OPENFLUX_DIR:-/opt/openflux-server}"
+DATA_DIR="${OPENFLUX_DATA_DIR:-/opt/etc/openflux-server}"
 PORT=5000
 MODE="localtunnel"        # localtunnel | lan | localhost
 LANG_CODE="ru"
@@ -31,6 +32,7 @@ ACTION="install"
 INIT_SCRIPT="/opt/etc/init.d/S99openflux"
 LOG_DIR="/opt/var/log"
 LOG_FILE="$LOG_DIR/openflux.log"
+SYS_LOG="$LOG_DIR/openflux-system.log"
 PID_FILE="/opt/var/run/openflux.pid"
 CLI_LINK="/opt/bin/openflux"
 
@@ -47,11 +49,13 @@ while [ $# -gt 0 ]; do
         --mode=*) MODE="${1#*=}" ;;
         --dir) shift; INSTALL_DIR="${1:-}" ;;
         --dir=*) INSTALL_DIR="${1#*=}" ;;
+        --data-dir) shift; DATA_DIR="${1:-}" ;;
+        --data-dir=*) DATA_DIR="${1#*=}" ;;
         --lang) shift; LANG_CODE="${1:-}" ;;
         --lang=*) LANG_CODE="${1#*=}" ;;
         -y|--yes) ASSUME_YES=1 ;;
         -h|--help)
-            sed -n '2,22p' "$0" 2>/dev/null || true
+            sed -n '2,24p' "$0" 2>/dev/null || true
             exit 0 ;;
         *) echo "  [ERROR] Неизвестный аргумент: $1" >&2; exit 1 ;;
     esac
@@ -83,9 +87,9 @@ if [ "$ACTION" = "uninstall" ]; then
 
     say "Удаление файлов..."
     rm -f "$INIT_SCRIPT" "$PID_FILE" "$CLI_LINK"
-    rm -rf "$INSTALL_DIR"
+    rm -rf "$INSTALL_DIR" "$DATA_DIR"
 
-    ok "OpenFlux Server удалён. Логи остались в $LOG_FILE"
+    ok "OpenFlux Server удалён. Логи остались в $LOG_FILE и $SYS_LOG"
     exit 0
 fi
 
@@ -124,7 +128,6 @@ if [ "$FREE_KB" -lt 60000 ]; then
     warn "На /opt свободно $((FREE_KB/1024)) МБ — впритык, бинарники ~40-60 МБ."
 fi
 
-# Порт занят?
 if netstat -ltn 2>/dev/null | grep -q ":$PORT "; then
     die "Порт $PORT уже занят. Выберите другой: --port 8080"
 fi
@@ -170,6 +173,29 @@ say "Установка в $INSTALL_DIR (режим: $MODE, порт: $PORT)..."
 [ -x "$INSTALL_DIR/openflux-server-web" ] || die "Панель не установлена"
 ok "Файлы установлены"
 
+# ------------------------------------------------- перенос данных в /opt/etc
+# Установщик всегда кладёт данные в <dir>/data. Раскладываем по соглашению Entware:
+#   конфиги и данные -> /opt/etc/openflux-server
+#   system.log       -> /opt/var/log/openflux-system.log (+ симлинк из каталога данных)
+if [ "$DATA_DIR" != "$INSTALL_DIR/data" ]; then
+    say "Перенос данных в $DATA_DIR..."
+    mkdir -p "$(dirname "$DATA_DIR")"
+    if [ -e "$DATA_DIR" ] && [ -n "$(ls -A "$DATA_DIR" 2>/dev/null)" ]; then
+        die "$DATA_DIR уже существует и не пуст. Уберите его или укажите --data-dir"
+    fi
+    mv "$INSTALL_DIR/data" "$DATA_DIR"
+    chmod 700 "$DATA_DIR"
+fi
+
+say "Вынос системного лога в $SYS_LOG..."
+mkdir -p "$DATA_DIR/logs"
+if [ -f "$DATA_DIR/logs/system.log" ] && [ ! -L "$DATA_DIR/logs/system.log" ]; then
+    mv "$DATA_DIR/logs/system.log" "$SYS_LOG"
+fi
+touch "$SYS_LOG"; chmod 600 "$SYS_LOG"
+ln -sf "$SYS_LOG" "$DATA_DIR/logs/system.log"
+ok "$SYS_LOG"
+
 # --------------------------------------------------------------- init-скрипт
 say "Создание службы $INIT_SCRIPT..."
 cat > "$INIT_SCRIPT" <<'INIT_EOF'
@@ -181,6 +207,7 @@ DESC="OpenFlux Server"
 NAME=openflux-server-web
 DAEMON=__DAEMON__
 DATA_DIR=__DATA_DIR__
+SYSLOG=__SYSLOG__
 PORT=__PORT__
 PIDFILE=__PIDFILE__
 LOGFILE=__LOGFILE__
@@ -209,7 +236,12 @@ start() {
     [ "$ENABLED" = "yes" ] || { echo "$DESC disabled"; return 8; }
     if running; then echo "$DESC already running (pid $(cat "$PIDFILE"))"; return 0; fi
     firewall_open
-    mkdir -p "$(dirname "$PIDFILE")" "$(dirname "$LOGFILE")"
+    mkdir -p "$(dirname "$PIDFILE")" "$(dirname "$LOGFILE")" "$DATA_DIR/logs"
+    # system.log живёт в /opt/var/log; симлинк восстанавливаем при каждом старте.
+    if [ ! -L "$DATA_DIR/logs/system.log" ]; then
+        rm -f "$DATA_DIR/logs/system.log"
+        ln -sf "$SYSLOG" "$DATA_DIR/logs/system.log"
+    fi
     echo -n "Starting $DESC: "
     nohup "$DAEMON" --data-dir "$DATA_DIR" >>"$LOGFILE" 2>&1 &
     echo $! > "$PIDFILE"
@@ -253,19 +285,19 @@ case "$1" in
 esac
 INIT_EOF
 
-# Подстановка путей в шаблон
 sed -i \
     -e "s|__DAEMON__|$INSTALL_DIR/openflux-server-web|" \
-    -e "s|__DATA_DIR__|$INSTALL_DIR/data|" \
+    -e "s|__DATA_DIR__|$DATA_DIR|" \
+    -e "s|__SYSLOG__|$SYS_LOG|" \
     -e "s|__PORT__|$PORT|" \
     -e "s|__PIDFILE__|$PID_FILE|" \
     -e "s|__LOGFILE__|$LOG_FILE|" \
     "$INIT_SCRIPT" 2>/dev/null || {
-        # На некоторых сборках busybox sed есть, но -i работает иначе
         TMP_INIT="$TMP_DIR/S99openflux"
         sed \
             -e "s|__DAEMON__|$INSTALL_DIR/openflux-server-web|" \
-            -e "s|__DATA_DIR__|$INSTALL_DIR/data|" \
+            -e "s|__DATA_DIR__|$DATA_DIR|" \
+            -e "s|__SYSLOG__|$SYS_LOG|" \
             -e "s|__PORT__|$PORT|" \
             -e "s|__PIDFILE__|$PID_FILE|" \
             -e "s|__LOGFILE__|$LOG_FILE|" \
@@ -273,9 +305,39 @@ sed -i \
     }
 chmod 755 "$INIT_SCRIPT"
 
-# CLI в PATH, чтобы работали `openflux network status` и т.п.
+# Обёртка CLI: данные лежат вне каталога программы, поэтому передаём --data-dir.
+# ВАЖНО: $CLI_LINK может быть симлинком на сам бинарник CLI — сначала удаляем его,
+# иначе перенаправление перезапишет CLI. Пишем во временный файл и подменяем атомарно.
 if [ -x "$INSTALL_DIR/openflux-server-cli" ]; then
-    ln -sf "$INSTALL_DIR/openflux-server-cli" "$CLI_LINK"
+    mkdir -p "$(dirname "$CLI_LINK")"
+    cat > "$CLI_LINK.tmp" <<'WRAP_EOF'
+#!/bin/sh
+# Обёртка CLI OpenFlux для Entware.
+# 1. Данные лежат вне каталога программы — всегда передаём --data-dir.
+# 2. systemd нет: команды службы уходят в init-скрипт S99openflux.
+DATA_DIR=__DATA_DIR__
+INIT=__INIT__
+CLI=__CLI__
+cmd="${1:-help}"
+case "$cmd" in
+    start|stop|restart|status)
+        [ -x "$INIT" ] || { echo "OpenFlux: не найден $INIT" >&2; exit 1; }
+        exec "$INIT" "$cmd"
+        ;;
+    uninstall)
+        echo "OpenFlux: на Entware удаление выполняет sh install-entware.sh --uninstall" >&2
+        exit 1
+        ;;
+esac
+exec "$CLI" --data-dir "$DATA_DIR" "$@"
+WRAP_EOF
+    sed \
+        -e "s|__DATA_DIR__|$DATA_DIR|" \
+        -e "s|__INIT__|$INIT_SCRIPT|" \
+        -e "s|__CLI__|$INSTALL_DIR/openflux-server-cli|" \
+        "$CLI_LINK.tmp" > "$CLI_LINK.new" && rm -f "$CLI_LINK" && mv "$CLI_LINK.new" "$CLI_LINK"
+    rm -f "$CLI_LINK.tmp"
+    chmod 755 "$CLI_LINK"
     ok "Команда: $CLI_LINK"
 fi
 
@@ -286,11 +348,11 @@ say "Запуск службы..."
 say "Ожидание готовности панели на порту $PORT..."
 i=0
 while [ $i -lt 30 ]; do
-    if curl -fsS --max-time 2 -o /dev/null "http://127.0.0.1:$PORT/" 2>/dev/null; then break; fi
+    if curl -sS --max-time 2 -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/" 2>/dev/null | grep -q '^[1-5]'; then break; fi
     sleep 1; i=$((i+1))
 done
 
-if curl -fsS --max-time 2 -o /dev/null "http://127.0.0.1:$PORT/" 2>/dev/null; then
+if curl -sS --max-time 2 -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/" 2>/dev/null | grep -q '^[1-5]'; then
     ok "Панель отвечает"
 else
     warn "Панель пока не отвечает. Проверьте: $INIT_SCRIPT status; tail -20 $LOG_FILE"
@@ -299,14 +361,16 @@ fi
 # --------------------------------------------------------------- итог
 LAN_IP=$(ip -4 addr show br0 2>/dev/null | awk '/inet /{print $2}' | cut -d/ -f1)
 [ -n "$LAN_IP" ] || LAN_IP=$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src") print $(i+1)}')
+SECRET=$(sed -n 's/.*"secretPath"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$DATA_DIR/settings.json" 2>/dev/null)
 
 echo ""
 echo "=============================================================="
 echo "  OpenFlux Server установлен"
 echo "=============================================================="
-[ -n "$LAN_IP" ] && echo "  Из локальной сети (телефон в Wi-Fi): http://$LAN_IP:$PORT/"
+[ -n "$LAN_IP" ] && echo "  Из локальной сети (телефон в Wi-Fi): http://$LAN_IP:$PORT/$SECRET/"
+echo "  Данные:   $DATA_DIR"
+echo "  Лог:      $SYS_LOG"
 echo "  Проверка: $INIT_SCRIPT status"
-echo "  Логи:     $LOG_FILE"
 echo "  Логин/пароль: см. $LOG_DIR/openflux-install.log"
 echo ""
 echo "  Служба стартует автоматически: $INIT_SCRIPT (S99 = после сети)"
