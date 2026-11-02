@@ -42,8 +42,8 @@ for arg in "$@"; do
         echo "  [INFO] Очистка правил брандмауэра..."
         ufw delete allow 5000/tcp 2>/dev/null || true
         if command -v firewall-cmd >/dev/null 2>&1 && firewall-cmd --state >/dev/null 2>&1; then
+            firewall-cmd --remove-port=5000/tcp 2>/dev/null || true
             firewall-cmd --permanent --remove-port=5000/tcp 2>/dev/null || true
-            firewall-cmd --reload 2>/dev/null || true
         fi
         rm -f /etc/nginx/conf.d/openflux*.conf /etc/nginx/sites-enabled/openflux* /etc/nginx/sites-available/openflux* 2>/dev/null || true
         systemctl reload nginx 2>/dev/null || true

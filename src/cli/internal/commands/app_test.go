@@ -274,3 +274,22 @@ func TestUninstallChecksPrivilegesAndOwnershipBeforeAnyMutation(t *testing.T) {
 		}
 	}
 }
+
+func TestUninstallPromptsForClosingFirewallPort(t *testing.T) {
+	for _, keepPort := range []bool{false, true} {
+		a, dir, _, _ := fixture(t)
+		answer := "yes\ny\n"
+		if keepPort {
+			answer = "yes\nn\n"
+		}
+		a.In = strings.NewReader(answer)
+		err := a.Run([]string{"uninstall", "--dir", dir, "--no-service", "--lang", "ru"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		output := a.Out.(*bytes.Buffer).String()
+		if !strings.Contains(output, "Закрыть порт панели (5000) в брандмауэре (firewall)?") {
+			t.Fatalf("uninstall did not prompt for firewall port: %s", output)
+		}
+	}
+}

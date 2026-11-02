@@ -4,12 +4,15 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"net"
+	"path/filepath"
+	"strconv"
+	"strings"
+
 	"openflux.local/server/cli/internal/platform"
 	"openflux.local/server/panel/configuration"
 	"openflux.local/server/panel/firewall"
 	"openflux.local/server/panel/l3guard"
-	"path/filepath"
-	"strings"
 )
 
 func (a *App) uninstall() error {
@@ -32,17 +35,36 @@ func (a *App) uninstall() error {
 	if (s.Registered || marker.PathAdded) && !a.IsAdmin() {
 		return ErrAdmin
 	}
+	reader := bufio.NewReader(a.In)
 	if !a.Options.Yes {
 		if a.Options.JSON {
 			return errors.New(a.text("для удаления с --json требуется --yes", "uninstall with --json requires --yes"))
 		}
 		question := a.text("Вы уверены, что хотите полностью удалить OpenFlux Server из системы (все службы, настройки, туннели и файлы)?", "Are you sure you want to completely uninstall OpenFlux Server from system (all services, settings, tunnels and files)?")
 		fmt.Fprint(a.Out, a.colored("33", "  "+question+" [y/N, default: N]: "))
-		line, _ := bufio.NewReader(a.In).ReadString('\n')
+		line, _ := reader.ReadString('\n')
 		answer := strings.ToLower(strings.TrimSpace(line))
 		if answer != "y" && answer != "yes" && answer != "да" {
 			a.notice("WARN", "33", a.text("Удаление отменено.", "Uninstallation cancelled."))
 			return nil
+		}
+	}
+	panelPort := 5000
+	if settings, err := configuration.ReadSettings(a.Options.DataDir); err == nil {
+		if _, p, splitErr := net.SplitHostPort(settings.Listen); splitErr == nil {
+			if n, parseErr := strconv.Atoi(p); parseErr == nil && n > 0 && n <= 65535 {
+				panelPort = n
+			}
+		}
+	}
+	closePort := true
+	if !a.Options.Yes {
+		portQuestion := fmt.Sprintf(a.text("Закрыть порт панели (%d) в брандмауэре (firewall)?", "Close panel port (%d) in system firewall?"), panelPort)
+		fmt.Fprint(a.Out, a.colored("33", "  "+portQuestion+" [Y/n, default: Y]: "))
+		line, _ := reader.ReadString('\n')
+		answer := strings.ToLower(strings.TrimSpace(line))
+		if answer == "n" || answer == "no" || answer == "нет" {
+			closePort = false
 		}
 	}
 	if !a.Options.JSON {
@@ -70,7 +92,9 @@ func (a *App) uninstall() error {
 		_ = unlock()
 		return e
 	}
-	_ = firewall.RemoveAll("Panel & Web", platform.PanelPath(a.Options.Dir))
+	if closePort {
+		_ = firewall.ClosePort(panelPort, "Panel & Web", platform.PanelPath(a.Options.Dir))
+	}
 	if e = unlock(); e != nil {
 		return e
 	}

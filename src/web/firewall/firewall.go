@@ -67,6 +67,14 @@ func ClosePorts(ports []int, appName string) error {
 	return firstErr
 }
 
+// ClosePort removes a single TCP port from the OS firewall and application rules.
+func ClosePort(port int, appName, appPath string) error {
+	openedMu.Lock()
+	delete(openedPorts, port)
+	openedMu.Unlock()
+	return removeAllOSRules([]int{port}, appName, appPath)
+}
+
 // RemoveAll cleans up all OpenFlux firewall rules and application rules.
 func RemoveAll(appName, appPath string) error {
 	openedMu.Lock()
@@ -76,8 +84,6 @@ func RemoveAll(appName, appPath string) error {
 	for port := range openedPorts {
 		ports = append(ports, port)
 	}
-	// Common OpenFlux ports to ensure clean uninstall
-	ports = append(ports, 5000, 80, 443)
 
 	return removeAllOSRules(ports, appName, appPath)
 }

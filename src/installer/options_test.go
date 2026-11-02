@@ -16,7 +16,7 @@ func wizardSettings() configuration.Settings {
 
 func TestLegacyWizardChangesActualSettings(t *testing.T) {
 	var output bytes.Buffer
-	u := &terminal.UI{In: bufio.NewReader(strings.NewReader("2\n1\nn\n")), Out: &output, Interactive: true}
+	u := &terminal.UI{In: bufio.NewReader(strings.NewReader("2\n1\n\nn\n")), Out: &output, Interactive: true}
 	opts := installOptions{Autostart: true}
 	settings := wizardSettings()
 	if e := opts.wizard(u, settings, true); e != nil {
@@ -28,7 +28,7 @@ func TestLegacyWizardChangesActualSettings(t *testing.T) {
 	if settings.Language != "ru" || settings.Listen != "127.0.0.1:5000" || opts.Autostart {
 		t.Fatalf("wizard selections were ignored: %#v %#v", settings, opts)
 	}
-	for _, prompt := range []string{"Language / Язык", "Сетевое размещение", "автозапуск службы"} {
+	for _, prompt := range []string{"Language / Язык", "Сетевое размещение", "Порт веб-панели", "автозапуск службы"} {
 		if !strings.Contains(output.String(), prompt) {
 			t.Fatalf("missing legacy prompt: %s", prompt)
 		}
@@ -130,5 +130,43 @@ func TestInvalidWizardConfigurationAndPasswordOutput(t *testing.T) {
 	}
 	if bootstrapPassword("Username: admin\nPassword: fresh-password\n") != "fresh-password" {
 		t.Fatal("new password lost")
+	}
+}
+
+func TestWizardOpenPortPrompt(t *testing.T) {
+	var output bytes.Buffer
+	u := &terminal.UI{In: bufio.NewReader(strings.NewReader("2\n1\n\ny\nn\n")), Out: &output, Interactive: true}
+	opts := installOptions{Autostart: true}
+	settings := wizardSettings()
+	if e := opts.wizard(u, settings, true); e != nil {
+		t.Fatal(e)
+	}
+	if opts.OpenPort != false {
+		t.Fatalf("expected OpenPort to be false when answered 'n', got %v", opts.OpenPort)
+	}
+	if !strings.Contains(output.String(), "брандмауэре") {
+		t.Fatalf("missing firewall prompt in output: %s", output.String())
+	}
+}
+
+func TestWizardCustomPort(t *testing.T) {
+	var output bytes.Buffer
+	u := &terminal.UI{In: bufio.NewReader(strings.NewReader("2\n1\n8088\ny\ny\n")), Out: &output, Interactive: true}
+	opts := installOptions{Autostart: true}
+	settings := wizardSettings()
+	if e := opts.wizard(u, settings, true); e != nil {
+		t.Fatal(e)
+	}
+	if opts.Port != 8088 {
+		t.Fatalf("expected Port 8088, got %d", opts.Port)
+	}
+	if !opts.ExplicitPort {
+		t.Fatal("expected ExplicitPort to be true")
+	}
+	if e := opts.apply(&settings); e != nil {
+		t.Fatal(e)
+	}
+	if settings.Listen != "127.0.0.1:8088" {
+		t.Fatalf("expected listen 127.0.0.1:8088, got %s", settings.Listen)
 	}
 }

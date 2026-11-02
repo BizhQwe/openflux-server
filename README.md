@@ -86,6 +86,12 @@ curl -sSL https://raw.githubusercontent.com/BizhQwe/openflux-server/main/scripts
 irm https://raw.githubusercontent.com/BizhQwe/openflux-server/main/scripts/install.ps1 | iex
 ```
 
+#### Роутеры (Keenetic / OpenWrt с Entware)
+Для роутеров с установленной средой Entware (`/opt` на USB-накопителе или встроенном хранилище). Поддерживаются архитектуры `armv7`, `arm64`, `386`, `amd64`. Служба регистрируется в `/opt/etc/init.d/S99openflux`, а память оптимизируется под ресурсы роутера (`GOMEMLIMIT=192MiB`, `GOGC=50`):
+```bash
+curl -sSL https://raw.githubusercontent.com/BizhQwe/openflux-server/main/scripts/install-entware.sh | sh
+```
+
 ### Вариант 2: Загрузка готового установщика (GitHub Releases)
 
 Перейдите на страницу [GitHub Releases](https://github.com/BizhQwe/openflux-server/releases) и скачайте файл установщика для своей системы:

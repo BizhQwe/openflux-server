@@ -76,7 +76,6 @@ func (s *Server) runDomainSetup(ctx context.Context) {
 		case job := <-s.domainSetup.requests:
 			s.manager.SystemLog("info", "Настройка HTTPS: запрос сертификата домена %s", job.next.Domain)
 			child, cancel := context.WithTimeout(ctx, 3*time.Minute)
-			_ = firewall.OpenPort(80, "ACME HTTP")
 			cert, key, err := s.domainSetup.issue(child, s.store.Dir, job.next.Domain)
 			cancel()
 			if err == nil {
@@ -137,9 +136,6 @@ func (s *Server) saveNetworkSettings(previous, next Settings) error {
 		}
 	}
 	portsToOpen := []int{panelPort}
-	if merged.DomainEnabled {
-		portsToOpen = append(portsToOpen, 80, 443)
-	}
 	exe, _ := os.Executable()
 	_ = firewall.OpenPorts(portsToOpen, "Panel & Web", exe)
 	return s.saveSettingsLocked(merged)

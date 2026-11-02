@@ -30,27 +30,36 @@ func openOSPort(port int, appName, appPath string) error {
 		_ = runCmd("ufw", "allow", tcpPort, "comment", comment)
 	}
 
-	// 2. Try firewalld if active
+	// 2. Try firewalld if active (without --reload which wipes other programs' runtime rules)
 	if _, err := exec.LookPath("firewall-cmd"); err == nil {
 		if runCmd("firewall-cmd", "--state") == nil {
 			attempted = true
+			_ = runCmd("firewall-cmd", fmt.Sprintf("--add-port=%s", tcpPort))
 			_ = runCmd("firewall-cmd", "--permanent", fmt.Sprintf("--add-port=%s", tcpPort))
-			_ = runCmd("firewall-cmd", "--reload")
 		}
 	}
 
-	// 3. Try iptables
+	// 3. Try iptables with comment tag so we never delete other apps' rules
 	if _, err := exec.LookPath("iptables"); err == nil {
 		attempted = true
-		if runCmd("iptables", "-C", "INPUT", "-p", "tcp", "--dport", portStr, "-j", "ACCEPT") != nil {
-			_ = runCmd("iptables", "-I", "INPUT", "-p", "tcp", "--dport", portStr, "-j", "ACCEPT")
+		if runCmd("iptables", "-C", "INPUT", "-p", "tcp", "--dport", portStr, "-m", "comment", "--comment", comment, "-j", "ACCEPT") != nil {
+			if runCmd("iptables", "-I", "INPUT", "1", "-p", "tcp", "--dport", portStr, "-m", "comment", "--comment", comment, "-j", "ACCEPT") != nil {
+				if runCmd("iptables", "-C", "INPUT", "-p", "tcp", "--dport", portStr, "-j", "ACCEPT") != nil {
+					_ = runCmd("iptables", "-I", "INPUT", "1", "-p", "tcp", "--dport", portStr, "-j", "ACCEPT")
+				}
+			}
 		}
 	}
 
-	// 4. Try ip6tables
+	// 4. Try ip6tables with comment tag
 	if _, err := exec.LookPath("ip6tables"); err == nil {
-		if runCmd("ip6tables", "-C", "INPUT", "-p", "tcp", "--dport", portStr, "-j", "ACCEPT") != nil {
-			_ = runCmd("ip6tables", "-I", "INPUT", "-p", "tcp", "--dport", portStr, "-j", "ACCEPT")
+		attempted = true
+		if runCmd("ip6tables", "-C", "INPUT", "-p", "tcp", "--dport", portStr, "-m", "comment", "--comment", comment, "-j", "ACCEPT") != nil {
+			if runCmd("ip6tables", "-I", "INPUT", "1", "-p", "tcp", "--dport", portStr, "-m", "comment", "--comment", comment, "-j", "ACCEPT") != nil {
+				if runCmd("ip6tables", "-C", "INPUT", "-p", "tcp", "--dport", portStr, "-j", "ACCEPT") != nil {
+					_ = runCmd("ip6tables", "-I", "INPUT", "1", "-p", "tcp", "--dport", portStr, "-j", "ACCEPT")
+				}
+			}
 		}
 	}
 
@@ -66,6 +75,7 @@ func closeOSPort(port int, appName string) error {
 	}
 	portStr := strconv.Itoa(port)
 	tcpPort := fmt.Sprintf("%d/tcp", port)
+	comment := fmt.Sprintf("OpenFlux %s", appName)
 
 	if _, err := exec.LookPath("ufw"); err == nil {
 		_ = runCmd("ufw", "delete", "allow", tcpPort)
@@ -73,18 +83,20 @@ func closeOSPort(port int, appName string) error {
 
 	if _, err := exec.LookPath("firewall-cmd"); err == nil {
 		if runCmd("firewall-cmd", "--state") == nil {
+			_ = runCmd("firewall-cmd", fmt.Sprintf("--remove-port=%s", tcpPort))
 			_ = runCmd("firewall-cmd", "--permanent", fmt.Sprintf("--remove-port=%s", tcpPort))
-			_ = runCmd("firewall-cmd", "--reload")
 		}
 	}
 
 	if _, err := exec.LookPath("iptables"); err == nil {
-		for runCmd("iptables", "-D", "INPUT", "-p", "tcp", "--dport", portStr, "-j", "ACCEPT") == nil {
+		if runCmd("iptables", "-D", "INPUT", "-p", "tcp", "--dport", portStr, "-m", "comment", "--comment", comment, "-j", "ACCEPT") != nil {
+			_ = runCmd("iptables", "-D", "INPUT", "-p", "tcp", "--dport", portStr, "-j", "ACCEPT")
 		}
 	}
 
 	if _, err := exec.LookPath("ip6tables"); err == nil {
-		for runCmd("ip6tables", "-D", "INPUT", "-p", "tcp", "--dport", portStr, "-j", "ACCEPT") == nil {
+		if runCmd("ip6tables", "-D", "INPUT", "-p", "tcp", "--dport", portStr, "-m", "comment", "--comment", comment, "-j", "ACCEPT") != nil {
+			_ = runCmd("ip6tables", "-D", "INPUT", "-p", "tcp", "--dport", portStr, "-j", "ACCEPT")
 		}
 	}
 

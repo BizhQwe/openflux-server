@@ -84,9 +84,14 @@ func run() (result error) {
 	domain := flag.String("domain", "", "Public domain / reverse proxy URL")
 	port := flag.Int("port", 0, "Panel port (1-65535)")
 	autostart := flag.String("autostart", "", "Boot autostart: on or off")
+	openPort := flag.String("open-port", "", "Open panel port in system firewall: on or off")
+	entwareFlag := flag.Bool("entware", false, "Install as Entware SysVinit service (/opt/etc/init.d/S99openflux) with router memory limits")
 	flag.Parse()
 	if *lang == "ru" {
 		u.Language = "ru"
+	}
+	if *entwareFlag {
+		forceEntware = true
 	}
 	if flag.NArg() > 1 || (flag.NArg() == 1 && flag.Arg(0) != "install") {
 		return errors.New("usage: installer [options] [install]")
@@ -114,7 +119,7 @@ func run() (result error) {
 		if e = preflightService(); e != nil {
 			return e
 		}
-		if runtime.GOOS == "linux" {
+		if runtime.GOOS == "linux" && !isEntware() {
 			if _, e = systemdUnit(dir); e != nil {
 				return e
 			}
@@ -129,7 +134,7 @@ func run() (result error) {
 	if fresh {
 		previous = configuration.Settings{Username: "admin", SecretPath: "preview-settings", Listen: "0.0.0.0:5000", Language: "en", AutoStartEnabled: true}
 	}
-	opts := installOptions{Listen: *listen, NoService: *noService, Silent: *silent, Mode: *mode, ModeSet: *mode != "", Domain: *domain, Language: *lang, LanguageSet: *lang != "", Port: *port, Autostart: true, AutostartSet: *autostart != ""}
+	opts := installOptions{Listen: *listen, NoService: *noService, Silent: *silent, Mode: *mode, ModeSet: *mode != "", Domain: *domain, Language: *lang, LanguageSet: *lang != "", Port: *port, Autostart: true, AutostartSet: *autostart != "", OpenPort: true, OpenPortSet: *openPort != ""}
 	var portSet bool
 	flag.Visit(func(f *flag.Flag) {
 		if f.Name == "domain" {
@@ -137,6 +142,11 @@ func run() (result error) {
 		}
 		if f.Name == "port" {
 			portSet = true
+			opts.PortSet = true
+			opts.ExplicitPort = true
+		}
+		if f.Name == "open-port" {
+			opts.OpenPortSet = true
 		}
 	})
 	if portSet && (*port < 1 || *port > 65535) {
@@ -153,6 +163,16 @@ func run() (result error) {
 			opts.Autostart = false
 		default:
 			return errors.New("--autostart must be on or off")
+		}
+	}
+	if opts.OpenPortSet {
+		switch strings.ToLower(*openPort) {
+		case "on", "true", "1", "enable", "yes", "y", "да":
+			opts.OpenPort = true
+		case "off", "false", "0", "disable", "no", "n", "нет":
+			opts.OpenPort = false
+		default:
+			return errors.New("--open-port must be on or off")
 		}
 	}
 	fmt.Fprintln(u.Out)
@@ -177,7 +197,7 @@ func run() (result error) {
 	}
 	if fresh {
 		previousListen := preview.Listen
-		if e = freshPanelPort(&preview, opts.Listen != "" || opts.Port != 0); e != nil {
+		if e = freshPanelPort(&preview, opts.Listen != "" || opts.ExplicitPort); e != nil {
 			return e
 		}
 		if preview.Listen != previousListen {
@@ -245,7 +265,6 @@ func run() (result error) {
 			}
 			cert, key, err := configuration.FindDomainTLS(data, next.Domain, next.TLSCert, next.TLSKey)
 			if err != nil {
-				_ = firewall.OpenPort(80, "ACME HTTP")
 				ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 				cert, key, err = issueTLS(ctx, data, next.Domain)
 				cancel()
@@ -276,9 +295,7 @@ func run() (result error) {
 			return err
 		}
 		unlock = nil
-		if !opts.NoService {
-			if err = registerService(dir, opts.Autostart); err != nil {
-
+		if opts.OpenPort {
 			panelPort := 5000
 			if _, p, splitErr := net.SplitHostPort(next.Listen); splitErr == nil {
 				if n, parseErr := strconv.Atoi(p); parseErr == nil && n > 0 {
@@ -286,17 +303,17 @@ func run() (result error) {
 				}
 			}
 			portsToOpen := []int{panelPort}
-			if next.DomainEnabled || opts.Mode == "domain" {
-				portsToOpen = append(portsToOpen, 80, 443)
-			}
 			_, webExe := executableNames()
 			_ = firewall.OpenPorts(portsToOpen, "Panel & Web", filepath.Join(dir, webExe))
+		}
+		if !opts.NoService {
+			if err = registerService(dir, opts.Autostart); err != nil {
 				return fmt.Errorf("files installed in %s, but service registration failed: %w", dir, err)
 			}
 			if err = runInstalled(dir, "__path", "install", "--dir", dir); err != nil {
 				return err
 			}
-			if runtime.GOOS == "linux" {
+			if runtime.GOOS == "linux" && !isEntware() {
 				alias, lookupErr := exec.LookPath("openflux")
 				if lookupErr != nil {
 					return fmt.Errorf("openflux is unavailable in PATH after registration: %w", lookupErr)

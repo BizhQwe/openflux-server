@@ -92,3 +92,6 @@ func registerService(dir string, autostart bool) error {
 	}
 	return nil
 }
+
+var forceEntware bool
+func isEntware() bool { return false }

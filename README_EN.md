@@ -87,6 +87,12 @@ Open **PowerShell as Administrator** and execute:
 irm https://raw.githubusercontent.com/BizhQwe/openflux-server/main/scripts/install.ps1 | iex
 ```
 
+#### Routers (Keenetic / OpenWrt with Entware)
+For routers running the Entware environment (`/opt` on USB drive or internal storage). Supports `armv7`, `arm64`, `386`, `amd64` architectures. The service is registered as `/opt/etc/init.d/S99openflux`, with automatic memory optimization for router hardware (`GOMEMLIMIT=192MiB`, `GOGC=50`):
+```bash
+curl -sSL https://raw.githubusercontent.com/BizhQwe/openflux-server/main/scripts/install-entware.sh | sh
+```
+
 ### Method 2: Standalone Release Installer (GitHub Releases)
 
 Head over to [GitHub Releases](https://github.com/BizhQwe/openflux-server/releases) and download the standalone installer for your platform:

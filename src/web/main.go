@@ -70,7 +70,6 @@ func run() error {
 		defer unlock()
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 		defer cancel()
-		_ = firewall.OpenPort(80, "ACME HTTP")
 		cert, key, err := configuration.IssueTLS(ctx, store.Dir, settings.Domain)
 		if err != nil {
 			return err
@@ -136,9 +135,6 @@ func run() error {
 		}
 	}
 	portsToOpen := []int{panelPort}
-	if settings.DomainEnabled {
-		portsToOpen = append(portsToOpen, 80, 443)
-	}
 	_ = firewall.OpenPorts(portsToOpen, "Panel & Web", executable)
 
 		return e

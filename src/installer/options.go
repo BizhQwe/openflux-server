@@ -13,9 +13,12 @@ import (
 type installOptions struct {
 	Listen, Mode, Domain, Language                     string
 	Port                                               int
+	PortSet, ExplicitPort                              bool
 	NoService, Silent, LanguageSet, ModeSet, DomainSet bool
 	Autostart                                          bool
 	AutostartSet                                       bool
+	OpenPort                                           bool
+	OpenPortSet                                        bool
 }
 
 func publishMode(s configuration.Settings) string {
@@ -75,8 +78,40 @@ func (o *installOptions) wizard(u *terminal.UI, previous configuration.Settings,
 		o.Domain = u.AskText(u.Text("Домен без схемы — прямой доступ; полный URL — готовый reverse proxy (Enter — без домена)", "Hostname for direct access, full URL for an existing reverse proxy (Enter for no domain)"), previous.Domain)
 		o.DomainSet = true
 	}
+	if interactive && !o.PortSet && o.Listen == "" {
+		defaultPort := 5000
+		if o.Port > 0 && o.Port <= 65535 {
+			defaultPort = o.Port
+		} else if _, p, err := net.SplitHostPort(previous.Listen); err == nil {
+			if n, err := strconv.Atoi(p); err == nil && n > 0 && n <= 65535 {
+				defaultPort = n
+			}
+		}
+		for {
+			val := u.AskText(u.Text("Порт веб-панели", "Web panel port"), strconv.Itoa(defaultPort))
+			parsed, err := strconv.Atoi(strings.TrimSpace(val))
+			if err == nil && parsed >= 1 && parsed <= 65535 {
+				o.Port = parsed
+				o.PortSet = true
+				if val != strconv.Itoa(defaultPort) {
+					o.ExplicitPort = true
+				}
+				break
+			}
+			u.Error(u.Text("Порт должен быть числом от 1 до 65535", "Port must be a number between 1 and 65535"))
+			if !u.Interactive {
+				o.Port = defaultPort
+				o.PortSet = true
+				break
+			}
+		}
+	}
 	if interactive && !o.NoService && !o.AutostartSet {
 		o.Autostart = u.YesNo(u.Text("Включить автозапуск службы при загрузке системы?", "Enable server autostart on system boot?"), true)
+	}
+	if interactive && !o.OpenPortSet {
+		o.OpenPort = u.YesNo(u.Text("Открыть порт панели в брандмауэре (firewall)?", "Open panel port in system firewall?"), true)
+		o.OpenPortSet = true
 	}
 	return nil
 }
