@@ -30,6 +30,9 @@ func (a *App) text(ru, en string) string {
 	if a.Options.Language == "en" {
 		return en
 	}
+	if a.Out == os.Stdout && !platform.ConsoleSupportsCyrillic() && os.Getenv("OPENFLUX_FORCE_CYRILLIC") == "" {
+		return en
+	}
 	return ru
 }
 func (a *App) emit(value any) error {
@@ -44,14 +47,12 @@ func (a *App) Run(args []string) error {
 	}
 	a.Options = o
 	if o.Language == "" {
+		o.Language = "ru"
+		if s, e := configuration.ReadSettings(o.DataDir); e == nil && s.Language == "en" {
+			o.Language = "en"
+		}
 		if language := os.Getenv("OPENFLUX_LANGUAGE"); language == "ru" || language == "en" {
 			o.Language = language
-		} else if !platform.ConsoleSupportsCyrillic() {
-			o.Language = "en"
-		} else if s, e := configuration.ReadSettings(o.DataDir); e == nil && (s.Language == "ru" || s.Language == "en") {
-			o.Language = s.Language
-		} else {
-			o.Language = "ru"
 		}
 		a.Options = o
 	}

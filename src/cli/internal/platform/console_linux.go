@@ -1,8 +1,10 @@
 package platform
 
 import (
-	"golang.org/x/sys/unix"
 	"os"
+	"strings"
+
+	"golang.org/x/sys/unix"
 )
 
 func ConsoleColor() bool {
@@ -18,8 +20,7 @@ func ConsoleSupportsCyrillic() bool {
 	if os.Getenv("OPENFLUX_FORCE_CYRILLIC") != "" {
 		return true
 	}
-	term := os.Getenv("TERM")
-	if term == "linux" {
+	if os.Getenv("TERM") == "linux" {
 		return false
 	}
 	for _, fd := range []string{"/proc/self/fd/0", "/proc/self/fd/1"} {
@@ -27,14 +28,6 @@ func ConsoleSupportsCyrillic() bool {
 			if strings.HasPrefix(target, "/dev/tty") && !strings.HasPrefix(target, "/dev/ttyS") && !strings.HasPrefix(target, "/dev/pts/") {
 				return false
 			}
-		}
-	}
-	for _, env := range []string{"LC_ALL", "LC_CTYPE", "LANG"} {
-		if val := os.Getenv(env); val != "" {
-			if val == "C" || val == "POSIX" {
-				return false
-			}
-			break
 		}
 	}
 	return true
