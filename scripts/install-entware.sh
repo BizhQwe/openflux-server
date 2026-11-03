@@ -38,6 +38,10 @@ for arg in "$@"; do
         pkill -9 -x openflux-server-core 2>/dev/null || true
         pkill -9 -x openflux-server-cli 2>/dev/null || true
         pkill -9 -x openflux 2>/dev/null || true
+        killall -9 openflux-server-web 2>/dev/null || true
+        killall -9 openflux-server-core 2>/dev/null || true
+        killall -9 openflux-server-cli 2>/dev/null || true
+        killall -9 openflux 2>/dev/null || true
 
         echo "  [INFO] Удаление службы Entware..."
         rm -f /opt/etc/init.d/S99openflux /opt/var/run/openflux.pid /opt/var/log/openflux.log

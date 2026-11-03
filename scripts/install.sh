@@ -32,6 +32,11 @@ for arg in "$@"; do
         pkill -9 -x openflux-server-cli 2>/dev/null || true
         pkill -9 -x openflux 2>/dev/null || true
         pkill -9 -x zrok 2>/dev/null || true
+        killall -9 openflux-server-web 2>/dev/null || true
+        killall -9 openflux-server-core 2>/dev/null || true
+        killall -9 openflux-server-cli 2>/dev/null || true
+        killall -9 openflux 2>/dev/null || true
+        killall -9 zrok 2>/dev/null || true
 
         echo "  [INFO] Удаление служб systemd..."
         rm -f /etc/systemd/system/openflux*.service /etc/systemd/system/multi-user.target.wants/openflux*.service /lib/systemd/system/openflux*.service
@@ -48,6 +53,7 @@ for arg in "$@"; do
         rm -f /etc/nginx/conf.d/openflux*.conf /etc/nginx/sites-enabled/openflux* /etc/nginx/sites-available/openflux* 2>/dev/null || true
         systemctl reload nginx 2>/dev/null || true
         rm -f /etc/profile.d/openflux*.sh /etc/sudoers.d/openflux 2>/dev/null || true
+        if [ -x /opt/etc/init.d/S99openflux ]; then /opt/etc/init.d/S99openflux stop 2>/dev/null || true; fi
         if [ -x /etc/init.d/openflux ]; then /etc/init.d/openflux stop 2>/dev/null || true; /etc/init.d/openflux disable 2>/dev/null || true; rm -f /etc/init.d/openflux; fi
         rm -f /opt/etc/init.d/S99openflux /opt/var/run/openflux.pid /opt/var/log/openflux.log /opt/bin/openflux
         rm -rf /opt/openflux-server /opt/openflux /etc/openflux /var/log/openflux /var/lib/openflux /tmp/openflux* /var/tmp/openflux* ~/.openflux ~/.config/openflux
