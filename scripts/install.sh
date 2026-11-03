@@ -95,7 +95,7 @@ CHECKSUM_FILE="$TMP_DIR/installer.sha256"
 trap 'rm -f -- "$INSTALLER_BIN" "$CHECKSUM_FILE"; rmdir -- "$TMP_DIR"' EXIT
 trap 'exit 1' HUP INT TERM
 REPO="${OPENFLUX_REPOSITORY:-BizhQwe/openflux-server}"
-if [ -n "$OPENFLUX_TAG" ]; then
+if [ -n "${OPENFLUX_TAG:-}" ]; then
     RELEASE_BASE="https://github.com/$REPO/releases/download/$OPENFLUX_TAG"
 else
     RELEASE_BASE="${OPENFLUX_RELEASE_BASE:-https://github.com/$REPO/releases/latest/download}"

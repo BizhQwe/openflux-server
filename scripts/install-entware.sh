@@ -76,7 +76,7 @@ trap 'rm -rf "$TMP_DIR"' EXIT HUP INT TERM
 
 REPO="${OPENFLUX_REPOSITORY:-BizhQwe/openflux-server}"
 ASSET="openflux-server-installer-$RID"
-if [ -n "$OPENFLUX_TAG" ]; then
+if [ -n "${OPENFLUX_TAG:-}" ]; then
     RELEASE_BASE="https://github.com/$REPO/releases/download/$OPENFLUX_TAG"
 else
     RELEASE_BASE="${OPENFLUX_RELEASE_BASE:-https://github.com/$REPO/releases/latest/download}"
