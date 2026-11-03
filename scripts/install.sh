@@ -48,6 +48,8 @@ for arg in "$@"; do
         rm -f /etc/nginx/conf.d/openflux*.conf /etc/nginx/sites-enabled/openflux* /etc/nginx/sites-available/openflux* 2>/dev/null || true
         systemctl reload nginx 2>/dev/null || true
         rm -f /etc/profile.d/openflux*.sh /etc/sudoers.d/openflux 2>/dev/null || true
+        if [ -x /etc/init.d/openflux ]; then /etc/init.d/openflux stop 2>/dev/null || true; /etc/init.d/openflux disable 2>/dev/null || true; rm -f /etc/init.d/openflux; fi
+        rm -f /opt/etc/init.d/S99openflux /opt/var/run/openflux.pid /opt/var/log/openflux.log /opt/bin/openflux
         rm -rf /opt/openflux-server /opt/openflux /etc/openflux /var/log/openflux /var/lib/openflux /tmp/openflux* /var/tmp/openflux* ~/.openflux ~/.config/openflux
         rm -f /usr/local/bin/OpenFluxServer /usr/local/bin/openfluxzenserver /usr/local/bin/openflux /usr/local/bin/openflux-server /usr/bin/OpenFluxServer /usr/bin/openfluxzenserver /usr/bin/openflux /usr/bin/openflux-server /bin/openflux 2>/dev/null || true
 
@@ -93,7 +95,11 @@ CHECKSUM_FILE="$TMP_DIR/installer.sha256"
 trap 'rm -f -- "$INSTALLER_BIN" "$CHECKSUM_FILE"; rmdir -- "$TMP_DIR"' EXIT
 trap 'exit 1' HUP INT TERM
 REPO="${OPENFLUX_REPOSITORY:-BizhQwe/openflux-server}"
-RELEASE_BASE="https://github.com/$REPO/releases/latest/download"
+if [ -n "$OPENFLUX_TAG" ]; then
+    RELEASE_BASE="https://github.com/$REPO/releases/download/$OPENFLUX_TAG"
+else
+    RELEASE_BASE="${OPENFLUX_RELEASE_BASE:-https://github.com/$REPO/releases/latest/download}"
+fi
 TAG_BASE="https://github.com/$REPO/releases/download/v1.1.2"
 
 command -v curl >/dev/null 2>&1 || { echo '  [ERROR] curl is required.' >&2; exit 1; }

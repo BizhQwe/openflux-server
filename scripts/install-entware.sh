@@ -24,6 +24,37 @@ case "$ARCH" in
 esac
 
 [ "$(id -u)" -eq 0 ] || { echo "  [ERROR] Нужны права root (запустите через ssh root@...)" >&2; exit 1; }
+for arg in "$@"; do
+    if [ "$arg" = "--uninstall" ] || [ "$arg" = "uninstall" ] || [ "$arg" = "-u" ]; then
+        echo ""
+        echo "=============================================================="
+        echo "  OpenFlux Server — Полное удаление (Entware)"
+        echo "=============================================================="
+        echo "  [INFO] Остановка службы и процессов..."
+        if [ -x /opt/etc/init.d/S99openflux ]; then
+            /opt/etc/init.d/S99openflux stop 2>/dev/null || true
+        fi
+        pkill -9 -x openflux-server-web 2>/dev/null || true
+        pkill -9 -x openflux-server-core 2>/dev/null || true
+        pkill -9 -x openflux-server-cli 2>/dev/null || true
+        pkill -9 -x openflux 2>/dev/null || true
+
+        echo "  [INFO] Удаление службы Entware..."
+        rm -f /opt/etc/init.d/S99openflux /opt/var/run/openflux.pid /opt/var/log/openflux.log
+
+        echo "  [INFO] Очистка симлинков..."
+        rm -f /opt/bin/openflux /usr/local/bin/openflux /usr/bin/openflux 2>/dev/null || true
+
+        echo "  [INFO] Удаление конфигураций и файлов..."
+        rm -rf /opt/openflux-server /opt/openflux /etc/openflux /var/log/openflux /tmp/openflux* /opt/tmp/openflux*
+
+        echo ""
+        echo "  [OK] OpenFlux Server полностью удален из системы без каких-либо остатков."
+        echo "=============================================================="
+        echo ""
+        exit 0
+    fi
+done
 [ -d /opt/etc/init.d ] || { echo "  [ERROR] Entware не найден (/opt/etc/init.d отсутствует)." >&2; exit 1; }
 
 command -v curl >/dev/null 2>&1      || { echo "  [ERROR] Нужен curl: opkg install curl" >&2; exit 1; }
@@ -45,13 +76,22 @@ trap 'rm -rf "$TMP_DIR"' EXIT HUP INT TERM
 
 REPO="${OPENFLUX_REPOSITORY:-BizhQwe/openflux-server}"
 ASSET="openflux-server-installer-$RID"
-RELEASE_BASE="https://github.com/$REPO/releases/latest/download"
+if [ -n "$OPENFLUX_TAG" ]; then
+    RELEASE_BASE="https://github.com/$REPO/releases/download/$OPENFLUX_TAG"
+else
+    RELEASE_BASE="${OPENFLUX_RELEASE_BASE:-https://github.com/$REPO/releases/latest/download}"
+fi
 
 echo ""
 echo "  OpenFlux Server — Entware ($DISPLAY_ARCH)"
 echo "  Загрузка и проверка установщика..."
 
-curl --proto '=https' --proto-redir '=https' --tlsv1.2 \
+PROTO_ARGS="--proto =https --proto-redir =https --tlsv1.2"
+case "$RELEASE_BASE" in
+    http://*) PROTO_ARGS="--proto =https,http --proto-redir =https,http" ;;
+esac
+
+curl $PROTO_ARGS \
     --connect-timeout 15 --max-time 300 --retry 2 -fsSL \
     "$RELEASE_BASE/$ASSET.sha256" -o "$CHECKSUM_FILE" || {
         echo "  [ERROR] Не удалось загрузить контрольную сумму релиза." >&2
@@ -61,7 +101,7 @@ curl --proto '=https' --proto-redir '=https' --tlsv1.2 \
 EXPECTED=$(awk '{print $1; exit}' "$CHECKSUM_FILE" | tr -d '\r')
 [ "${#EXPECTED}" -eq 64 ] || { echo "  [ERROR] Некорректная контрольная сумма SHA-256." >&2; exit 1; }
 
-curl --proto '=https' --proto-redir '=https' --tlsv1.2 \
+curl $PROTO_ARGS \
     --connect-timeout 15 --max-time 600 --retry 2 -fsSL \
     "$RELEASE_BASE/$ASSET" -o "$INSTALLER_BIN" || {
         echo "  [ERROR] Не удалось загрузить файл установщика." >&2

@@ -80,7 +80,7 @@ func ExecutableDir() string {
 }
 func commandName(value string) string {
 	v := strings.ToLower(strings.TrimLeft(value, "-/"))
-	aliases := map[string]string{"h": "help", "?": "help", "помощь": "help", "справка": "help", "up": "start", "run": "start", "старт": "start", "запуск": "start", "down": "stop", "стоп": "stop", "остановить": "stop", "reboot": "restart", "рестарт": "restart", "перезапуск": "restart", "info": "status", "статус": "status", "инфо": "status", "autorun": "autostart", "автозапуск": "autostart", "net": "network", "placement": "network", "сеть": "network", "размещение": "network", "cred": "credentials", "creds": "credentials", "пароль": "credentials", "пароли": "credentials", "доступ": "credentials", "учетка": "credentials", "reset-password": "reset", "сброс": "reset", "сбросить": "reset", "remove": "uninstall", "delete": "uninstall", "удалить": "uninstall", "деинсталляция": "uninstall"}
+	aliases := map[string]string{"h": "help", "?": "help", "помощь": "help", "справка": "help", "up": "start", "run": "start", "старт": "start", "запуск": "start", "down": "stop", "стоп": "stop", "остановить": "stop", "reboot": "restart", "рестарт": "restart", "перезапуск": "restart", "info": "status", "статус": "status", "инфо": "status", "autorun": "autostart", "автозапуск": "autostart", "net": "network", "placement": "network", "сеть": "network", "размещение": "network", "cred": "credentials", "creds": "credentials", "пароль": "credentials", "пароли": "credentials", "доступ": "credentials", "учетка": "credentials", "reset-password": "reset", "сброс": "reset", "сбросить": "reset", "remove": "uninstall", "delete": "uninstall", "удалить": "uninstall", "деинсталляция": "uninstall", "u": "uninstall"}
 	if name, ok := aliases[v]; ok {
 		return name
 	}

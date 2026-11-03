@@ -86,6 +86,10 @@ func run() (result error) {
 	autostart := flag.String("autostart", "", "Boot autostart: on or off")
 	openPort := flag.String("open-port", "", "Open panel port in system firewall: on or off")
 	entwareFlag := flag.Bool("entware", false, "Install as Entware SysVinit service (/opt/etc/init.d/S99openflux) with router memory limits")
+	uninstallFlag := flag.Bool("uninstall", false, "Uninstall OpenFlux Server")
+	yesFlag := flag.Bool("yes", false, "Confirm uninstallation without prompting")
+	flag.BoolVar(uninstallFlag, "u", false, "Uninstall OpenFlux Server")
+	flag.BoolVar(yesFlag, "y", false, "Confirm uninstallation without prompting")
 	flag.Parse()
 	if *lang == "ru" {
 		u.Language = "ru"
@@ -93,8 +97,11 @@ func run() (result error) {
 	if *entwareFlag {
 		forceEntware = true
 	}
+	if *uninstallFlag || (flag.NArg() == 1 && flag.Arg(0) == "uninstall") {
+		return runUninstall(*dirFlag, *yesFlag || *silent)
+	}
 	if flag.NArg() > 1 || (flag.NArg() == 1 && flag.Arg(0) != "install") {
-		return errors.New("usage: installer [options] [install]")
+		return errors.New("usage: installer [options] [install|uninstall]")
 	}
 	raw, e := payload.ReadFile("payload/bundle.zip")
 	if e != nil {
@@ -377,5 +384,44 @@ func run() (result error) {
 		}
 	}
 	u.Summary(accessSummary(*initialized, data, password, true, !opts.NoService))
+	return nil
+}
+
+func runUninstall(dir string, yes bool) error {
+	cli := filepath.Join(dir, cliName())
+	if _, err := os.Stat(cli); err == nil {
+		args := []string{"uninstall", "--dir", dir}
+		if yes {
+			args = append(args, "--yes")
+		}
+		cmd := exec.Command(cli, args...)
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		return cmd.Run()
+	}
+	_ = stopService()
+	if runtime.GOOS == "linux" {
+		if isEntware() {
+			_ = os.Remove("/opt/etc/init.d/S99openflux")
+			_ = os.Remove("/opt/var/run/openflux.pid")
+			_ = os.Remove("/opt/var/log/openflux.log")
+			_ = os.Remove("/opt/bin/openflux")
+		} else if isOpenWrt() {
+			_ = exec.Command("/etc/init.d/openflux", "disable").Run()
+			_ = os.Remove("/etc/init.d/openflux")
+			_ = os.Remove("/usr/bin/openflux")
+			_ = os.Remove("/usr/local/bin/openflux")
+		} else {
+			_ = exec.Command("systemctl", "stop", "openflux-server.service").Run()
+			_ = exec.Command("systemctl", "disable", "openflux-server.service").Run()
+			_ = os.Remove("/etc/systemd/system/openflux-server.service")
+			_ = exec.Command("systemctl", "daemon-reload").Run()
+			_ = os.Remove("/usr/local/bin/openflux")
+			_ = os.Remove("/usr/bin/openflux")
+		}
+	}
+	_ = os.RemoveAll(dir)
+	fmt.Println("OpenFlux Server uninstalled.")
 	return nil
 }

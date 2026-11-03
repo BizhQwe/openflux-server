@@ -85,17 +85,22 @@ func registerAliases(target, legacyTarget string, aliases []string) error {
 			return fmt.Errorf("команда %s принадлежит другой программе", alias)
 		}
 	}
+	var registered int
+	var lastErr error
 	for _, alias := range aliases {
 		old, e := aliasTarget(alias)
 		if e == nil && configuration.SamePath(old, target) {
+			registered++
 			continue
 		}
 		if e = os.MkdirAll(filepath.Dir(alias), 0755); e != nil {
-			return e
+			lastErr = e
+			continue
 		}
 		file, e := os.CreateTemp(filepath.Dir(alias), ".openflux-alias-*")
 		if e != nil {
-			return e
+			lastErr = e
+			continue
 		}
 		temporary := file.Name()
 		_ = file.Close()
@@ -108,8 +113,13 @@ func registerAliases(target, legacyTarget string, aliases []string) error {
 		}
 		_ = os.Remove(temporary)
 		if e != nil {
-			return e
+			lastErr = e
+			continue
 		}
+		registered++
+	}
+	if registered == 0 && lastErr != nil {
+		return lastErr
 	}
 	return nil
 }

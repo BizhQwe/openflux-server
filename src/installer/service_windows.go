@@ -96,3 +96,4 @@ func registerService(dir string, autostart bool) error {
 
 var forceEntware bool
 func isEntware() bool { return false }
+func isOpenWrt() bool { return false }
