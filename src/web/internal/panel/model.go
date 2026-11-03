@@ -12,7 +12,7 @@ import (
 	"github.com/p1neappleXpress/OpenFlux/utils"
 )
 
-const Version = "1.3.2-preview.2"
+const Version = "1.3.2"
 const CoreVersion = "0.17.1"
 const ServerRole = "exit"
 

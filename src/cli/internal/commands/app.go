@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 )
 
-const Version = "1.3.2-preview.2"
+const Version = "1.3.2"
 
 var ErrAdmin = errors.New("запустите openflux через sudo (Linux) или PowerShell от имени администратора (Windows)")
 

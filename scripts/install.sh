@@ -101,9 +101,9 @@ CHECKSUM_FILE="$TMP_DIR/installer.sha256"
 trap 'rm -f -- "$INSTALLER_BIN" "$CHECKSUM_FILE"; rmdir -- "$TMP_DIR"' EXIT
 trap 'exit 1' HUP INT TERM
 REPO="${OPENFLUX_REPOSITORY:-BizhQwe/openflux-server}"
-TAG="${OPENFLUX_TAG:-v1.3.2-preview.2}"
+TAG="${OPENFLUX_TAG:-v1.3.2}"
 RELEASE_BASE="${OPENFLUX_RELEASE_BASE:-https://github.com/$REPO/releases/download/$TAG}"
-TAG_BASE="https://github.com/$REPO/releases/download/v1.3.2-preview.2"
+TAG_BASE="https://github.com/$REPO/releases/download/v1.3.2"
 
 if ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1 && ! command -v uclient-fetch >/dev/null 2>&1; then
     echo '  [ERROR] curl or wget is required.' >&2

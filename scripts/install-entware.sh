@@ -116,7 +116,7 @@ trap 'rm -rf "$TMP_DIR"' EXIT HUP INT TERM
 
 REPO="${OPENFLUX_REPOSITORY:-BizhQwe/openflux-server}"
 ASSET="openflux-server-installer-$RID"
-TAG="${OPENFLUX_TAG:-v1.3.2-preview.2}"
+TAG="${OPENFLUX_TAG:-v1.3.2}"
 RELEASE_BASE="${OPENFLUX_RELEASE_BASE:-https://github.com/$REPO/releases/download/$TAG}"
 
 echo ""
