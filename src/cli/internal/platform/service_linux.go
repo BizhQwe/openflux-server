@@ -16,6 +16,8 @@ import (
 
 	"strings"
 
+	"time"
+
 )
 
 func Hide(cmd *exec.Cmd)          {}
@@ -256,7 +258,16 @@ func (c *Controller) Stop(dir string) error {
 
 		}
 
-		return c.wait(dir, false)
+		if err := c.wait(dir, false); err != nil {
+			_ = exec.Command("killall", "-9", "openflux-server-web").Run()
+			_ = exec.Command("killall", "-9", "openflux-server-core").Run()
+			time.Sleep(500 * time.Millisecond)
+			if s, _ := c.Status(dir); !s.Running {
+				return nil
+			}
+			return err
+		}
+		return nil
 
 	}
 
@@ -270,7 +281,16 @@ func (c *Controller) Stop(dir string) error {
 
 		}
 
-		return c.wait(dir, false)
+		if err := c.wait(dir, false); err != nil {
+			_ = exec.Command("killall", "-9", "openflux-server-web").Run()
+			_ = exec.Command("killall", "-9", "openflux-server-core").Run()
+			time.Sleep(500 * time.Millisecond)
+			if s, _ := c.Status(dir); !s.Running {
+				return nil
+			}
+			return err
+		}
+		return nil
 
 	}
 

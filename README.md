@@ -75,10 +75,17 @@
 Скрипт автоматически определит архитектуру процессора, загрузит подходящий установщик из последнего релиза GitHub, сверит контрольную сумму SHA-256 и запустит мастер установки.
 
 #### Linux
-В системе должен быть установлен `curl` (при необходимости: `sudo apt install -y curl`):
+**Шаг 1. Установите `curl`** (если ещё не установлен):
+```bash
+sudo apt update && sudo apt install -y curl
+```
+*(для других дистрибутивов: `sudo dnf install -y curl` или `apk add curl`)*
+
+**Шаг 2. Запустите установку:**
 ```bash
 curl -sSL https://raw.githubusercontent.com/BizhQwe/openflux-server/main/scripts/install.sh | sudo sh
 ```
+*(или через `wget`, если curl недоступен: `wget -qO- https://raw.githubusercontent.com/BizhQwe/openflux-server/main/scripts/install.sh | sudo sh`)*
 
 #### Windows
 Откройте **PowerShell от имени администратора** и выполните:
@@ -87,10 +94,19 @@ irm https://raw.githubusercontent.com/BizhQwe/openflux-server/main/scripts/insta
 ```
 
 #### Роутеры (Keenetic / OpenWrt с Entware)
-Для роутеров с установленной средой Entware (`/opt` на USB-накопителе или встроенном хранилище). Поддерживаются архитектуры `armv7`, `arm64`, `386`, `amd64`. Служба регистрируется в `/opt/etc/init.d/S99openflux`, а память оптимизируется под ресурсы роутера (`GOMEMLIMIT=192MiB`, `GOGC=50`):
+Для роутеров с установленной средой Entware (`/opt` на USB-накопителе или встроенном хранилище). Поддерживаются архитектуры `armv7`, `arm64`, `386`, `amd64`. Служба регистрируется в `/opt/etc/init.d/S99openflux`, а память оптимизируется под ресурсы роутера (`GOMEMLIMIT=192MiB`, `GOGC=50`).
+
+**Шаг 1. Установите `curl` и сертификаты** (если они ещё не установлены):
+```bash
+opkg update && opkg install curl ca-certificates
+```
+
+**Шаг 2. Запустите установку:**
 ```bash
 curl -sSL https://raw.githubusercontent.com/BizhQwe/openflux-server/main/scripts/install-entware.sh | sh
 ```
+> [!NOTE]
+> Обратите внимание на символ вертикальной черты `|` (pipe, клавиши `Shift + \` на английской раскладке). Его нельзя заменять на двоеточие `:`.
 
 ### Вариант 2: Загрузка готового установщика (GitHub Releases)
 

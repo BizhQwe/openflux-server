@@ -75,11 +75,17 @@ Two convenient installation methods are supported:
 The installation script automatically detects your CPU architecture, downloads the matching installer from the latest GitHub Release, verifies the SHA-256 checksum, and launches the interactive setup wizard.
 
 #### Linux
-`curl` must be installed on your system (e.g., `sudo apt install -y curl`):
+**Step 1. Install `curl`** (if not already installed):
+```bash
+sudo apt update && sudo apt install -y curl
+```
+*(for other distributions: `sudo dnf install -y curl` or `apk add curl`)*
+
+**Step 2. Run the installer:**
 ```bash
 curl -sSL https://raw.githubusercontent.com/BizhQwe/openflux-server/main/scripts/install.sh | sudo sh
 ```
-*(if curl is not available, use `wget -qO- ... | sh`)*
+*(or via `wget` if curl is unavailable: `wget -qO- https://raw.githubusercontent.com/BizhQwe/openflux-server/main/scripts/install.sh | sudo sh`)*
 
 #### Windows
 Open **PowerShell as Administrator** and execute:
@@ -88,10 +94,19 @@ irm https://raw.githubusercontent.com/BizhQwe/openflux-server/main/scripts/insta
 ```
 
 #### Routers (Keenetic / OpenWrt with Entware)
-For routers running the Entware environment (`/opt` on USB drive or internal storage). Supports `armv7`, `arm64`, `386`, `amd64` architectures. The service is registered as `/opt/etc/init.d/S99openflux`, with automatic memory optimization for router hardware (`GOMEMLIMIT=192MiB`, `GOGC=50`):
+For routers running the Entware environment (`/opt` on USB drive or internal storage). Supports `armv7`, `arm64`, `386`, `amd64` architectures. The service is registered as `/opt/etc/init.d/S99openflux`, with automatic memory optimization for router hardware (`GOMEMLIMIT=192MiB`, `GOGC=50`).
+
+**Step 1. Install `curl` and certificates** (if not already installed):
+```bash
+opkg update && opkg install curl ca-certificates
+```
+
+**Step 2. Run the installer:**
 ```bash
 curl -sSL https://raw.githubusercontent.com/BizhQwe/openflux-server/main/scripts/install-entware.sh | sh
 ```
+> [!NOTE]
+> Make sure to type the pipe character `|` (`Shift + \` on English layout) and not a colon `:`.
 
 ### Method 2: Standalone Release Installer (GitHub Releases)
 

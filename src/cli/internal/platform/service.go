@@ -48,15 +48,21 @@ func (c *Controller) owned(dir string) (Status, error) {
 		return s, e
 	}
 	if !s.Registered {
-		return s, errors.New("служба не зарегистрирована; запустите цельный установщик без --no-service")
+		if ConsoleSupportsCyrillic() {
+			return s, errors.New("служба не зарегистрирована; запустите цельный установщик без --no-service")
+		}
+		return s, errors.New("service is not registered; run full installer without --no-service")
 	}
 	if !configuration.SamePath(s.Executable, PanelPath(dir)) {
-		return s, errors.New("служба принадлежит другой установке; укажите её каталог через --dir")
+		if ConsoleSupportsCyrillic() {
+			return s, errors.New("служба принадлежит другой установке; укажите её каталог через --dir")
+		}
+		return s, errors.New("service belongs to another installation; specify its directory with --dir")
 	}
 	return s, nil
 }
 func (c *Controller) wait(dir string, running bool) error {
-	for i := 0; i < 40; i++ {
+	for i := 0; i < 100; i++ {
 		s, e := c.Status(dir)
 		if e != nil {
 			return e
@@ -66,5 +72,8 @@ func (c *Controller) wait(dir string, running bool) error {
 		}
 		time.Sleep(250 * time.Millisecond)
 	}
-	return errors.New("служба не перешла в ожидаемое состояние за 10 секунд")
+	if ConsoleSupportsCyrillic() {
+		return errors.New("служба не перешла в ожидаемое состояние за 25 секунд")
+	}
+	return errors.New("service did not transition to expected state within 25 seconds")
 }

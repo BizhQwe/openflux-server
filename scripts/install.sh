@@ -101,20 +101,55 @@ CHECKSUM_FILE="$TMP_DIR/installer.sha256"
 trap 'rm -f -- "$INSTALLER_BIN" "$CHECKSUM_FILE"; rmdir -- "$TMP_DIR"' EXIT
 trap 'exit 1' HUP INT TERM
 REPO="${OPENFLUX_REPOSITORY:-BizhQwe/openflux-server}"
-if [ -n "${OPENFLUX_TAG:-}" ]; then
-    RELEASE_BASE="https://github.com/$REPO/releases/download/$OPENFLUX_TAG"
-else
-    RELEASE_BASE="${OPENFLUX_RELEASE_BASE:-https://github.com/$REPO/releases/latest/download}"
-fi
-TAG_BASE="https://github.com/$REPO/releases/download/v1.1.2"
+TAG="${OPENFLUX_TAG:-v1.3.2-preview.2}"
+RELEASE_BASE="${OPENFLUX_RELEASE_BASE:-https://github.com/$REPO/releases/download/$TAG}"
+TAG_BASE="https://github.com/$REPO/releases/download/v1.3.2-preview.2"
 
-command -v curl >/dev/null 2>&1 || { echo '  [ERROR] curl is required.' >&2; exit 1; }
-command -v sha256sum >/dev/null 2>&1 || { echo '  [ERROR] sha256sum is required.' >&2; exit 1; }
+if ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1 && ! command -v uclient-fetch >/dev/null 2>&1; then
+    echo '  [ERROR] curl or wget is required.' >&2
+    echo '          Install curl via your package manager:' >&2
+    echo '          OpenWrt / Entware:  opkg update && opkg install curl ca-certificates' >&2
+    echo '          Debian / Ubuntu:    apt update && apt install -y curl' >&2
+    echo '          Alpine Linux:       apk add curl' >&2
+    exit 1
+fi
+if ! command -v sha256sum >/dev/null 2>&1 && ! command -v shasum >/dev/null 2>&1 && ! command -v openssl >/dev/null 2>&1; then
+    echo '  [ERROR] sha256sum is required.' >&2
+    exit 1
+fi
 
 download() {
-    curl --proto '=https' --proto-redir '=https' --tlsv1.2 \
-        --connect-timeout 15 --max-time 300 --max-filesize "$3" \
-        --retry 2 -fsSL "$1" -o "$2"
+    _url="$1"
+    _out="$2"
+    _maxsize="$3"
+    if command -v curl >/dev/null 2>&1; then
+        curl --proto '=https' --proto-redir '=https' --tlsv1.2 \
+            --connect-timeout 15 --max-time 300 --max-filesize "$_maxsize" \
+            --retry 2 -fsSL "$_url" -o "$_out"
+    elif command -v wget >/dev/null 2>&1; then
+        wget -q -T 300 -O "$_out" "$_url"
+    elif command -v uclient-fetch >/dev/null 2>&1; then
+        uclient-fetch -q -T 300 -O "$_out" "$_url"
+    else
+        return 1
+    fi
+}
+
+verify_checksum() {
+    _hash="$1"
+    _file="$2"
+    _dir="$3"
+    if command -v sha256sum >/dev/null 2>&1; then
+        (cd "$_dir" && printf '%s  %s\n' "$_hash" "$_file" | sha256sum --check --status 2>/dev/null || \
+         cd "$_dir" && printf '%s  %s\n' "$_hash" "$_file" | sha256sum -c >/dev/null 2>&1)
+    elif command -v shasum >/dev/null 2>&1; then
+        (cd "$_dir" && printf '%s  %s\n' "$_hash" "$_file" | shasum -a 256 -c >/dev/null 2>&1)
+    elif command -v openssl >/dev/null 2>&1; then
+        _actual=$(openssl dgst -sha256 "$_dir/$_file" 2>/dev/null | awk '{print $NF}')
+        [ "$_actual" = "$_hash" ]
+    else
+        return 1
+    fi
 }
 
 echo ""
@@ -138,7 +173,7 @@ for base in "$RELEASE_BASE" "$TAG_BASE"; do
         continue
     fi
     [ -s "$INSTALLER_BIN" ] || { echo '  [ERROR] Empty installer.' >&2; exit 1; }
-    if ! (cd "$TMP_DIR" && printf '%s  %s\n' "$expected_hash" "$ASSET" | sha256sum --check --status); then
+    if ! verify_checksum "$expected_hash" "$ASSET" "$TMP_DIR"; then
         echo '  [ERROR] Installer SHA-256 mismatch. Nothing was executed.' >&2
         exit 1
     fi

@@ -61,8 +61,45 @@ for arg in "$@"; do
 done
 [ -d /opt/etc/init.d ] || { echo "  [ERROR] Entware не найден (/opt/etc/init.d отсутствует)." >&2; exit 1; }
 
-command -v curl >/dev/null 2>&1      || { echo "  [ERROR] Нужен curl: opkg install curl" >&2; exit 1; }
-command -v sha256sum >/dev/null 2>&1 || { echo "  [ERROR] Нужен sha256sum: opkg install coreutils-sha256sum" >&2; exit 1; }
+if ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1 && ! command -v uclient-fetch >/dev/null 2>&1; then
+    echo "  [ERROR] Для загрузки требуется curl или wget." >&2
+    echo "          Установите curl: opkg update && opkg install curl ca-certificates" >&2
+    exit 1
+fi
+if ! command -v sha256sum >/dev/null 2>&1 && ! command -v shasum >/dev/null 2>&1 && ! command -v openssl >/dev/null 2>&1; then
+    echo "  [ERROR] Нужен sha256sum: opkg install coreutils-sha256sum" >&2
+    exit 1
+fi
+
+calc_sha256() {
+    _target="$1"
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$_target" | awk '{print $1}'
+    elif command -v shasum >/dev/null 2>&1; then
+        shasum -a 256 "$_target" | awk '{print $1}'
+    elif command -v openssl >/dev/null 2>&1; then
+        openssl dgst -sha256 "$_target" 2>/dev/null | awk '{print $NF}'
+    fi
+}
+
+download_file() {
+    _url="$1"
+    _out="$2"
+    _timeout="${3:-300}"
+    if command -v curl >/dev/null 2>&1; then
+        _proto="--proto =https --proto-redir =https --tlsv1.2"
+        case "$_url" in
+            http://*) _proto="--proto =https,http --proto-redir =https,http" ;;
+        esac
+        curl $_proto --connect-timeout 15 --max-time "$_timeout" --retry 2 -fsSL "$_url" -o "$_out"
+    elif command -v wget >/dev/null 2>&1; then
+        wget -q -T "$_timeout" -O "$_out" "$_url"
+    elif command -v uclient-fetch >/dev/null 2>&1; then
+        uclient-fetch -q -T "$_timeout" -O "$_out" "$_url"
+    else
+        return 1
+    fi
+}
 
 # Проверка памяти роутера
 MEM_TOTAL=$(awk '/MemTotal/{print int($2/1024)}' /proc/meminfo 2>/dev/null || echo 0)
@@ -71,8 +108,7 @@ if [ "$MEM_TOTAL" -gt 0 ] && [ "$MEM_TOTAL" -lt 300 ] && [ "$SWAP_TOTAL" -lt 128
     echo "  [WARN] Всего ${MEM_TOTAL} МБ RAM и swap < 128 МБ. Рекомендуется включить swap-файл на USB/диске."
 fi
 
-TMP_BASE="/opt/tmp"
-[ -d "$TMP_BASE" ] && [ -w "$TMP_BASE" ] || TMP_BASE="/tmp"
+TMP_BASE="/tmp"
 TMP_DIR=$(mktemp -d "$TMP_BASE/openflux-install.XXXXXX")
 INSTALLER_BIN="$TMP_DIR/openflux-installer"
 CHECKSUM_FILE="$TMP_DIR/installer.sha256"
@@ -80,39 +116,27 @@ trap 'rm -rf "$TMP_DIR"' EXIT HUP INT TERM
 
 REPO="${OPENFLUX_REPOSITORY:-BizhQwe/openflux-server}"
 ASSET="openflux-server-installer-$RID"
-if [ -n "${OPENFLUX_TAG:-}" ]; then
-    RELEASE_BASE="https://github.com/$REPO/releases/download/$OPENFLUX_TAG"
-else
-    RELEASE_BASE="${OPENFLUX_RELEASE_BASE:-https://github.com/$REPO/releases/latest/download}"
-fi
+TAG="${OPENFLUX_TAG:-v1.3.2-preview.2}"
+RELEASE_BASE="${OPENFLUX_RELEASE_BASE:-https://github.com/$REPO/releases/download/$TAG}"
 
 echo ""
 echo "  OpenFlux Server - Entware ($DISPLAY_ARCH)"
 echo "  Downloading and verifying installer..."
 
-PROTO_ARGS="--proto =https --proto-redir =https --tlsv1.2"
-case "$RELEASE_BASE" in
-    http://*) PROTO_ARGS="--proto =https,http --proto-redir =https,http" ;;
-esac
-
-curl $PROTO_ARGS \
-    --connect-timeout 15 --max-time 300 --retry 2 -fsSL \
-    "$RELEASE_BASE/$ASSET.sha256" -o "$CHECKSUM_FILE" || {
-        echo "  [ERROR] Не удалось загрузить контрольную сумму релиза." >&2
-        exit 1
-    }
+download_file "$RELEASE_BASE/$ASSET.sha256" "$CHECKSUM_FILE" 300 || {
+    echo "  [ERROR] Не удалось загрузить контрольную сумму релиза." >&2
+    exit 1
+}
 
 EXPECTED=$(awk '{print $1; exit}' "$CHECKSUM_FILE" | tr -d '\r')
 [ "${#EXPECTED}" -eq 64 ] || { echo "  [ERROR] Некорректная контрольная сумма SHA-256." >&2; exit 1; }
 
-curl $PROTO_ARGS \
-    --connect-timeout 15 --max-time 600 --retry 2 -fsSL \
-    "$RELEASE_BASE/$ASSET" -o "$INSTALLER_BIN" || {
-        echo "  [ERROR] Не удалось загрузить файл установщика." >&2
-        exit 1
-    }
+download_file "$RELEASE_BASE/$ASSET" "$INSTALLER_BIN" 600 || {
+    echo "  [ERROR] Не удалось загрузить файл установщика." >&2
+    exit 1
+}
 
-ACTUAL=$(sha256sum "$INSTALLER_BIN" | awk '{print $1}')
+ACTUAL=$(calc_sha256 "$INSTALLER_BIN")
 [ "$ACTUAL" = "$EXPECTED" ] || { echo "  [ERROR] Контрольная сумма SHA-256 не совпала. Установка прервана." >&2; exit 1; }
 
 chmod 700 "$INSTALLER_BIN"
