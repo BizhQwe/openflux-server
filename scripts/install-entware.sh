@@ -28,9 +28,9 @@ for arg in "$@"; do
     if [ "$arg" = "--uninstall" ] || [ "$arg" = "uninstall" ] || [ "$arg" = "-u" ]; then
         echo ""
         echo "=============================================================="
-        echo "  OpenFlux Server — Полное удаление (Entware)"
+        echo "  OpenFlux Server - Uninstall (Entware)"
         echo "=============================================================="
-        echo "  [INFO] Остановка службы и процессов..."
+        echo "  [INFO] Stopping service and processes..."
         if [ -x /opt/etc/init.d/S99openflux ]; then
             /opt/etc/init.d/S99openflux stop 2>/dev/null || true
         fi
@@ -43,17 +43,17 @@ for arg in "$@"; do
         killall -9 openflux-server-cli 2>/dev/null || true
         killall -9 openflux 2>/dev/null || true
 
-        echo "  [INFO] Удаление службы Entware..."
+        echo "  [INFO] Removing Entware service..."
         rm -f /opt/etc/init.d/S99openflux /opt/var/run/openflux.pid /opt/var/log/openflux.log
 
-        echo "  [INFO] Очистка симлинков..."
+        echo "  [INFO] Removing symlinks..."
         rm -f /opt/bin/openflux /usr/local/bin/openflux /usr/bin/openflux 2>/dev/null || true
 
-        echo "  [INFO] Удаление конфигураций и файлов..."
+        echo "  [INFO] Removing configuration and server files..."
         rm -rf /opt/openflux-server /opt/openflux /etc/openflux /var/log/openflux /tmp/openflux* /opt/tmp/openflux*
 
         echo ""
-        echo "  [OK] OpenFlux Server полностью удален из системы без каких-либо остатков."
+        echo "  [OK] OpenFlux Server was completely uninstalled."
         echo "=============================================================="
         echo ""
         exit 0
@@ -87,8 +87,8 @@ else
 fi
 
 echo ""
-echo "  OpenFlux Server — Entware ($DISPLAY_ARCH)"
-echo "  Загрузка и проверка установщика..."
+echo "  OpenFlux Server - Entware ($DISPLAY_ARCH)"
+echo "  Downloading and verifying installer..."
 
 PROTO_ARGS="--proto =https --proto-redir =https --tlsv1.2"
 case "$RELEASE_BASE" in

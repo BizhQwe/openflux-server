@@ -22,6 +22,9 @@ func New(language string) *UI {
 }
 func (u *UI) Text(ru, en string) string {
 	if u.Language == "ru" {
+		if !ConsoleSupportsCyrillic() && os.Getenv("OPENFLUX_FORCE_CYRILLIC") == "" {
+			return en
+		}
 		return ru
 	}
 	return en

@@ -18,9 +18,9 @@ for arg in "$@"; do
     if [ "$arg" = "--uninstall" ] || [ "$arg" = "uninstall" ] || [ "$arg" = "-u" ]; then
         echo ""
         echo "=============================================================="
-        echo "  OpenFlux Server — Полное удаление"
+        echo "  OpenFlux Server - Uninstall"
         echo "=============================================================="
-        echo "  [INFO] Остановка служб и процессов..."
+        echo "  [INFO] Stopping services and processes..."
         systemctl disable --now openflux-server.service openflux-zrok.service openflux.service 2>/dev/null || true
         pkill -9 -x web 2>/dev/null || true
         pkill -9 -x OpenFlux.Server 2>/dev/null || true
@@ -38,13 +38,13 @@ for arg in "$@"; do
         killall -9 openflux 2>/dev/null || true
         killall -9 zrok 2>/dev/null || true
 
-        echo "  [INFO] Удаление служб systemd..."
+        echo "  [INFO] Removing systemd services..."
         rm -f /etc/systemd/system/openflux*.service /etc/systemd/system/multi-user.target.wants/openflux*.service /lib/systemd/system/openflux*.service
         systemctl daemon-reload 2>/dev/null || true
         systemctl reset-failed 2>/dev/null || true
 
-        echo "  [INFO] Удаление конфигураций и файлов..."
-        echo "  [INFO] Очистка правил брандмауэра..."
+        echo "  [INFO] Removing configurations and server files..."
+        echo "  [INFO] Cleaning firewall rules..."
         ufw delete allow 5000/tcp 2>/dev/null || true
         if command -v firewall-cmd >/dev/null 2>&1 && firewall-cmd --state >/dev/null 2>&1; then
             firewall-cmd --remove-port=5000/tcp 2>/dev/null || true
@@ -60,7 +60,7 @@ for arg in "$@"; do
         rm -f /usr/local/bin/OpenFluxServer /usr/local/bin/openfluxzenserver /usr/local/bin/openflux /usr/local/bin/openflux-server /usr/bin/OpenFluxServer /usr/bin/openfluxzenserver /usr/bin/openflux /usr/bin/openflux-server /bin/openflux 2>/dev/null || true
 
         echo ""
-        echo "  [OK] OpenFlux Server полностью удален из системы без каких-либо остатков."
+        echo "  [OK] OpenFlux Server was completely uninstalled."
         echo "=============================================================="
         echo ""
         exit 0
