@@ -30,9 +30,6 @@ func (a *App) text(ru, en string) string {
 	if a.Options.Language == "en" {
 		return en
 	}
-	if !platform.ConsoleSupportsCyrillic() && os.Getenv("OPENFLUX_FORCE_CYRILLIC") == "" {
-		return en
-	}
 	return ru
 }
 func (a *App) emit(value any) error {
